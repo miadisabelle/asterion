@@ -1,0 +1,221 @@
+Overview
+Build a full-stack system for managing software development as a living execution topology, implementing Asterion's core primitives:
+
+Structural Tensions - Issues as disequilibrium between current reality and desired outcome
+Telescoping Views - Recursive zoom across roadmap → runtime → subsystem → issue → action
+Phase Management - Germination → Assimilation → Completion lifecycle
+Knowledge Graph - Persistent relational memory (entities, relations, observations)
+
+Storage: Neon (PostgreSQL) for durable data + Upstash Redis for ephemeral state/caching
+
+1. Database Schema (Neon PostgreSQL)
+Create an asterion schema with the following tables:
+Core Tables
+-- Structural Tension Charts (issues as tension shapes)
+CREATE TABLE asterion.tensions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  desired_outcome TEXT NOT NULL,
+  current_reality TEXT NOT NULL,
+  
+  -- Phase: germination | assimilation | completion
+  phase TEXT NOT NULL DEFAULT 'germination',
+  
+  -- Telescoping: parent tension (for recursive depth)
+  parent_id UUID REFERENCES asterion.tensions(id) ON DELETE CASCADE,
+  telescope_depth INTEGER DEFAULT 0,
+  
+  -- Accountability (singular owner of outcome)
+  accountable_user_id UUID REFERENCES neon_auth.user(id),
+  
+  -- Metadata
+  due_date TIMESTAMPTZ,
+  progress INTEGER DEFAULT 0 CHECK (progress >= 0 AND progress <= 100),
+  status TEXT DEFAULT 'active', -- active | resolved | archived
+  
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Action Steps (telescoped sub-tensions)
+CREATE TABLE asterion.action_steps (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tension_id UUID NOT NULL REFERENCES asterion.tensions(id) ON DELETE CASCADE,
+  
+  title TEXT NOT NULL, -- becomes desired_outcome when telescoped
+  current_reality TEXT,
+  progress INTEGER DEFAULT 0,
+  completed BOOLEAN DEFAULT FALSE,
+  due_date TIMESTAMPTZ,
+  sort_order INTEGER DEFAULT 0,
+  
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Knowledge Graph: Entities
+CREATE TABLE asterion.entities (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  entity_type TEXT NOT NULL, -- person | concept | system | repository | etc.
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Knowledge Graph: Relations
+CREATE TABLE asterion.relations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  from_entity_id UUID NOT NULL REFERENCES asterion.entities(id) ON DELETE CASCADE,
+  to_entity_id UUID NOT NULL REFERENCES asterion.entities(id) ON DELETE CASCADE,
+  relation_type TEXT NOT NULL, -- depends_on | owns | implements | etc.
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Knowledge Graph: Observations (execution traces)
+CREATE TABLE asterion.observations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  entity_id UUID REFERENCES asterion.entities(id) ON DELETE CASCADE,
+  tension_id UUID REFERENCES asterion.tensions(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  observation_type TEXT, -- progress | blocker | insight | mmot
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- MMOT Evaluations (Managerial Moment of Truth)
+CREATE TABLE asterion.mmot_evaluations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tension_id UUID NOT NULL REFERENCES asterion.tensions(id) ON DELETE CASCADE,
+  
+  phase TEXT NOT NULL, -- acknowledge | analyze | plan | document
+  expected TEXT NOT NULL,
+  delivered TEXT NOT NULL,
+  analysis TEXT,
+  corrective_actions JSONB DEFAULT '[]',
+  
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Narrative Beats (story continuity)
+CREATE TABLE asterion.narrative_beats (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tension_id UUID REFERENCES asterion.tensions(id) ON DELETE CASCADE,
+  
+  beat_type TEXT NOT NULL, -- inciting | complication | crisis | climax | resolution
+  content TEXT NOT NULL,
+  relational_context TEXT,
+  
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Indexes for performance
+CREATE INDEX idx_tensions_parent ON asterion.tensions(parent_id);
+CREATE INDEX idx_tensions_phase ON asterion.tensions(phase);
+CREATE INDEX idx_tensions_accountable ON asterion.tensions(accountable_user_id);
+CREATE INDEX idx_action_steps_tension ON asterion.action_steps(tension_id);
+CREATE INDEX idx_relations_from ON asterion.relations(from_entity_id);
+CREATE INDEX idx_relations_to ON asterion.relations(to_entity_id);
+CREATE INDEX idx_observations_entity ON asterion.observations(entity_id);
+CREATE INDEX idx_observations_tension ON asterion.observations(tension_id);
+
+2. Upstash Redis Usage
+
+Session cache: User session data, active tension views
+Real-time state: Currently selected telescope depth, active filters
+Event queue: Async processing for MMOT triggers, phase transitions
+Validation cache: Cached validation results for tension charts
+
+Keys pattern:
+asterion:session:{userId}
+asterion:telescope:{tensionId}:depth
+asterion:queue:phase_transition
+asterion:cache:validation:{tensionId}
+
+
+3. Application Structure
+API Routes
+/api/tensions
+  GET    - List tensions (with telescope depth filter)
+  POST   - Create new tension
+  
+/api/tensions/[id]
+  GET    - Get tension with action steps
+  PATCH  - Update tension (phase, progress, reality)
+  DELETE - Archive tension
+
+/api/tensions/[id]/telescope
+  POST   - Telescope action step into full tension
+
+/api/tensions/[id]/action-steps
+  POST   - Add action step
+  PATCH  - Update action step
+  DELETE - Remove action step
+
+/api/tensions/[id]/mmot
+  POST   - Create MMOT evaluation
+  GET    - Get MMOT history
+
+/api/graph/entities
+  GET/POST - Manage knowledge graph entities
+
+/api/graph/relations
+  GET/POST - Manage entity relations
+
+/api/graph/observations
+  POST   - Record observation
+
+Pages
+/                    - Dashboard (tension overview, phase distribution)
+/tensions            - Tension list with filtering
+/tensions/[id]       - Tension detail with telescoping
+/tensions/new        - Create tension wizard
+/graph               - Knowledge graph visualization
+/mmot/[tensionId]    - MMOT evaluation flow
+
+
+4. Key Components
+Tension Components
+
+TensionCard - Compact card showing title, phase, progress
+TensionDetail - Full view with current reality, desired outcome, action steps
+TensionForm - Create/edit with validation (Fritz methodology)
+TelescopeView - Recursive depth navigation
+PhaseIndicator - Visual phase state (germination/assimilation/completion)
+
+Validation (Fritz Methodology)
+
+Warn on comparative terms ("better", "more", "less")
+Warn on process language ("every day", "continue to")
+Warn on problem-solving framing ("fix", "solve", "eliminate")
+Detect premature resolution in current reality
+
+Graph Components
+
+GraphCanvas - D3.js or react-flow visualization
+EntityNode - Clickable entity with type icon
+RelationEdge - Labeled connection lines
+
+MMOT Components
+
+MMOTWizard - 4-step flow (Acknowledge → Analyze → Plan → Document)
+MMOTHistory - Timeline of past evaluations
+
+
+5. Implementation Order
+
+Schema setup - Run DDL via Neon MCP
+Lib layer - lib/asterion/ with types + data access
+API routes - CRUD for tensions, action steps, MMOT
+Dashboard page - Overview with tension cards, phase stats
+Tension detail page - Full CRUD with telescoping
+Validation system - Fritz methodology checks
+Knowledge graph - Entity/relation management + visualization
+MMOT flow - Evaluation wizard
+
+
+6. Design Direction
+
+Dark mode primary (constellation metaphor)
+Phase colors: Germination (amber), Assimilation (blue), Completion (green)
+Telescope depth visualized as nested containers or breadcrumb trail
+Graph visualization with force-directed layout
+Progress rings on tension cards

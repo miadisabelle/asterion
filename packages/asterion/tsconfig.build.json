@@ -1,0 +1,20 @@
+{
+  "//": "Publish build, same discipline as hooks-core: CommonJS + .d.ts in dist/ so the package runs under any Node with no type-stripping.",
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "es2022",
+    "lib": ["es2022"],
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "declaration": true,
+    
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "sourceMap": false,
+    "noEmit": false,
+    "incremental": false
+  },
+  "include": ["src/**/*.ts"]
+}

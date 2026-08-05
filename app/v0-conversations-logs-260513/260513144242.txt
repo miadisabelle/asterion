@@ -1,0 +1,177 @@
+ASTERION — The Shapes of the System
+
+✦ Runtime
+
+Asterion is not the brain.
+It is the stable execution gravity between changing brains, tools, repositories, and workflows. Models evolve; the runtime preserves continuity, orchestration, and structural direction.
+
+⸻
+
+✦ Structural Tension
+
+Every issue becomes a tension shape:
+
+* current reality
+* desired outcome
+* unresolved distance
+
+The gap generates movement.
+Execution emerges from structure, not pressure. ￼
+
+⸻
+
+✦ GitHub Projects
+
+Projects are not boards.
+They are recursive lenses over the same execution graph. One issue may exist simultaneously inside architecture, narrative, implementation, evaluation, and roadmap perspectives. ￼
+
+⸻
+
+✦ Issues
+
+An issue is not a task.
+It is a structural node carrying:
+
+* intent
+* accountability
+* dependencies
+* memory
+* advancement state
+* recursion lineage
+
+Issues become persistent execution coordinates.
+
+⸻
+
+✦ Custom Fields
+
+Custom fields externalize cognition:
+
+* phase
+* direction
+* accountability
+* evaluation state
+* narrative arc
+* telescope depth
+* tension status
+
+Metadata becomes shared runtime memory instead of hidden agent context.【370†RISPEC: Schema Evolution — Typed Ecosystem Metadata for PDE, Planning, and Accountability†L1-L40】
+
+⸻
+
+✦ Shared Memory
+
+Memory must exist outside the model.
+If memory lives inside one provider, the workflow becomes trapped inside that provider. Shared memory creates runtime-neutral continuity across agents, repos, and execution surfaces.
+
+⸻
+
+✦ Telescoping
+
+Asterion supports zoom recursion:
+
+* roadmap
+    → runtime
+    → subsystem
+    → issue
+    → action step
+
+Each level inherits structural constraints while preserving relationship to the larger vision. ￼
+
+⸻
+
+✦ Runtime Routing
+
+Not every execution step deserves frontier cognition.
+Cheap classification, hosted summarization, and frontier judgment coexist inside one orchestration loop. The runtime routes execution to the appropriate intelligence layer.
+
+⸻
+
+✦ MMOT Evaluation
+
+Execution includes witnessing itself.
+The system:
+
+1. acknowledges reality
+2. analyzes structure
+3. updates the chart
+4. recommits or redirects
+
+Correction becomes structural learning instead of failure recovery.【378†MMOT Self-Evaluation & Self-Correction Component†L1-L36】
+
+⸻
+
+✦ Narrative Layer
+
+Narrative is not decoration.
+Stories preserve continuity between actions, meaning, relationships, and transformation. Narrative beats become observable structural memory across recursive execution systems.【381†Narrative Beat Creation Component†L1-L36】
+
+⸻
+
+✦ Knowledge Graph
+
+The graph is the persistent nervous system:
+
+* entities
+* relations
+* observations
+* execution traces
+
+Repos contain implementation.
+The graph preserves meaning and relational continuity. ￼
+
+⸻
+
+✦ Accountability
+
+Responsibility performs work.
+Accountability owns outcomes.
+
+Action steps may distribute responsibility across humans and agents, but desired outcomes require singular accountability to preserve structural clarity.【371†RISPEC: Accountability vs. Responsibility — Schema Distinction†L1-L30】
+
+⸻
+
+✦ Educational Guidance
+
+The system teaches through interaction.
+Validation errors, reframing, and structural corrections gradually train creators toward objective reality, creative orientation, and advancing patterns instead of oscillating problem-solving loops. ￼
+
+⸻
+
+✦ Phases
+
+Execution evolves through:
+
+* Germination
+* Assimilation
+* Completion
+
+Each phase requires different energies, constraints, and rhythms. Premature completion collapses tension; endless germination prevents embodiment. ￼
+
+⸻
+
+✦ Asterion Itself
+
+Asterion is the constellation layer.
+
+Repositories are stars.
+Issues are gravitational bodies.
+Projects are observational perspectives.
+Memory is the dark matter binding continuity.
+The runtime navigates the constellation without becoming trapped inside any single brain.
+
+⸻
+
+✦ Final Compression
+
+Asterion transforms software development into:
+
+* recursive execution
+* structural navigation
+* memory-oriented orchestration
+* narrative-aware governance
+* durable creative advancement
+
+Not project management.
+
+A living execution topology.

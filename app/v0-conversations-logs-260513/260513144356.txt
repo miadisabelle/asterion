@@ -1,0 +1,9 @@
+Thought for 1sFetched integration detailsExplore • 2 FilesI now have comprehensive context on Asterion's architecture. The database already has `neon_auth` schema with user/session tables. I need to create the Asterion-specific tables for tensions, telescoping, phases, and knowledge graph.
+
+Loaded Neon skillFound Neon MCP toolsLoaded neon_run_sqlNow I'll enter plan mode to design the full architecture before building:
+
+Entered plan modeExplore • 1 File • 2 SearchesExplore • 2 Files • 1 SearchThis is a fresh Next.js 16 project with a solid shadcn/ui component library already installed. Now let me query Context7 for more Asterion primitives (MMOT, narrative, phases, knowledge graph):
+
+Queried more Asterion docsLoaded Context7 toolsLoaded Context7_query-docsQueried MMOT + phases docsRead full MMOT docsNow I have comprehensive understanding of all Asterion primitives. Let me write the plan:
+
+Wrote Asterion planPlan ready for review

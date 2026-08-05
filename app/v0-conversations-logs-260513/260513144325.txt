@@ -1,0 +1,6 @@
+**What type of interface do you want to build for managing Asterion-style projects?**: probably both, in context7, lib "/jgwill/llms-txt/" well I have complementary information so if you need a question for guidance it will probably be a very good source for you if you still have questions do not hesitate
+
+**Which Asterion primitives should we prioritize first?**: Structural Tensions, Telescoping Views, Phase Management, Knowledge Graph
+
+**What storage/integration should we use?**: Neon + Upstash
+

@@ -1,0 +1,30 @@
+stateDiagram-v2
+    open_gate --> closing_yesterday : HANDOFF_EXITS_1
+    open_gate --> investigating_deletion : DELETION_WATCH_HIT
+    open_gate --> reading_inheritance : HANDOFF_CLEAN [the deletion-watch tail also shows no uninvestigated hit]
+    closing_yesterday --> investigating_deletion : DELETION_WATCH_HIT
+    closing_yesterday --> reading_inheritance : YESTERDAY_CLOSED
+    investigating_deletion --> reading_inheritance : DELETION_ACCOUNTED
+    reading_inheritance --> advancing_work : INHERITANCE_READ [the branch's most confident prescription was measured by running its command before any work (§7g point 5)]
+    advancing_work --> triaging_mention : MENTION_ARRIVES
+    advancing_work --> advancing_work : WILLIAM_BRIEFS [an action step is telescoped onto an existing chart or a master is opened, and the seat says which was chosen and why]
+    advancing_work --> checking_lane_marks : LANE_WAIT_WAKES
+    advancing_work --> holding_for_william : DECISION_IS_WILLIAMS [the act is §8-reserved or fails the test: if this turns out wrong, can it be undone without asking anyone's forgiveness]
+    advancing_work --> recording_mmot : WILLIAM_GIVES_FEEDBACK
+    advancing_work --> close_gate : SESSION_CLOSE_CALLED
+    advancing_work --> greeting_the_owner : SHARED_SURFACE_NAMED
+    advancing_work --> speaking_to_the_walk : VOICE_PUBLISHED [the return address matches where the seat actually sits, and the lease posture was read before publishing — a voice that cannot be answered is not published as a conversation]
+    triaging_mention --> advancing_work : TRIAGE_KEY_WRITTEN [routed self — the seat can finish it in the turn it was asked]
+    triaging_mention --> dispatching_lane : TRIAGE_KEY_WRITTEN [the work is lane-shaped (own context, own artifact, one imperative with a boundary) and a survey of everything already running found no live twin]
+    triaging_mention --> holding_for_william : TRIAGE_KEY_WRITTEN [routed human — the next step is William's act or decision]
+    dispatching_lane --> advancing_work : BRIEF_DELIVERY_CONFIRMED [the brief carries all four owed items with same-turn-verified facts, demands the three completion marks, and the background wait is armed in the same turn]
+    checking_lane_marks --> advancing_work : LANE_MARKS_COMPLETE [the seat verified the lane's claims itself before reporting]
+    checking_lane_marks --> advancing_work : LANE_IDLE_NO_MARKS [the lane's held question is one the seat can read and answer itself — answer it and re-arm the wait until the chart closes]
+    checking_lane_marks --> holding_for_william : LANE_IDLE_NO_MARKS [the lane's held question is William's to answer]
+    holding_for_william --> advancing_work : WILLIAM_RULES [consent names this specific act; the timing judgement stays the seat's and the owning conversation is read in the same turn (§8, §10)]
+    holding_for_william --> advancing_work : HELD_DECISION_CHARTED [the held item exists as an action step, or it was not held; the seat continues other standing work]
+    recording_mmot --> advancing_work : MMOT_PHASE_RECORDED
+    close_gate --> day_closed : CLOSE_GATE_COMPLETE [nothing unstaged left unexplained past a day boundary, records staged by name, and merging the PR remains William's unless delegated for that specific PR]
+    greeting_the_owner --> advancing_work : OWNER_MECHANISM_USED
+    greeting_the_owner --> holding_for_william : DECISION_IS_WILLIAMS [two owners claim the surface, or the owner's intent cannot be read from their artifacts]
+    speaking_to_the_walk --> advancing_work : WALK_REPLY_ARRIVES [the reply was submitted in the pane, not left staged — verified by the seat receiving it, never by the send returning ok]

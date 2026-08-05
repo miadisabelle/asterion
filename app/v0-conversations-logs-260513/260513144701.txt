@@ -1,0 +1,305 @@
+Overview
+Build an interactive documentation system treating docs as recursive transmission — not static pages:
+
+Dual audience modes: Technical (normal) + Explorer Mode (accessible cognition for advanced 12-year-olds)
+Four content origins: Academic, Technical/Engineering, Narrative, Operational
+Document types: concept, guide, rispec, api, playbook, diagram, story, decision
+Lifecycle status: draft, review, canonical, deprecated
+Provenance: Source references linking to tensions, entities, GitHub, files, URLs
+Interactive diagrams: Using mermaidcn (shadcn-compatible Mermaid renderer)
+Admin editing with revision history: Content stored in database, editable in-app, versioned
+Educational methodology: Callouts that teach why framing matters, not just what to click
+
+
+Database Schema
+asterion.doc_pages
+CREATE TABLE asterion.doc_pages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  slug TEXT NOT NULL UNIQUE,
+  title TEXT NOT NULL,
+  title_explorer TEXT,                          -- Explorer Mode title
+  origin TEXT NOT NULL,                         -- 'academic' | 'technical' | 'narrative' | 'operational'
+  doc_type TEXT DEFAULT 'concept',              -- 'concept' | 'guide' | 'rispec' | 'api' | 'playbook' | 'diagram' | 'story' | 'decision'
+  status TEXT DEFAULT 'draft',                  -- 'draft' | 'review' | 'canonical' | 'deprecated'
+  parent_id UUID REFERENCES asterion.doc_pages(id) ON DELETE SET NULL,
+  sort_order INTEGER DEFAULT 0,
+  audience_notes JSONB DEFAULT '{}',            -- Different metaphors/diagrams/sequences per audience
+  source_refs JSONB DEFAULT '[]',               -- Provenance: [{type: 'github_issue', ref: 'owner/repo#123'}, ...]
+  tags TEXT[] DEFAULT '{}',
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+asterion.doc_sections
+CREATE TABLE asterion.doc_sections (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  page_id UUID NOT NULL REFERENCES asterion.doc_pages(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  title_explorer TEXT,
+  content TEXT NOT NULL,
+  content_explorer TEXT,
+  section_type TEXT DEFAULT 'text',             -- 'text' | 'diagram' | 'callout' | 'code' | 'interactive' | 'methodology'
+  diagram_type TEXT,                            -- 'layer_map' | 'tension_chart' | 'telescope_tree' | 'runtime_loop' | 'project_lens' | 'event_timeline' | 'narrative_thread' | 'github_sync'
+  diagram_code TEXT,                            -- Mermaid diagram code if section_type='diagram'
+  callout_type TEXT,                            -- 'info' | 'warning' | 'tip' | 'why' | 'methodology'
+  sort_order INTEGER DEFAULT 0,
+  status TEXT DEFAULT 'draft',
+  source_refs JSONB DEFAULT '[]',
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+asterion.doc_links — Rich artifact relations
+CREATE TABLE asterion.doc_links (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  from_section_id UUID NOT NULL REFERENCES asterion.doc_sections(id) ON DELETE CASCADE,
+  -- All possible link targets
+  to_page_id UUID REFERENCES asterion.doc_pages(id) ON DELETE CASCADE,
+  to_tension_id UUID REFERENCES asterion.tensions(id) ON DELETE CASCADE,
+  to_entity_id UUID REFERENCES asterion.entities(id) ON DELETE CASCADE,
+  to_layer_id UUID REFERENCES asterion.layers(id) ON DELETE CASCADE,
+  to_project_id UUID REFERENCES asterion.projects(id) ON DELETE CASCADE,
+  to_event_id UUID REFERENCES asterion.events(id) ON DELETE CASCADE,
+  to_thread_id UUID REFERENCES asterion.narrative_threads(id) ON DELETE CASCADE,
+  to_github_ref TEXT,                           -- 'owner/repo#123' or 'owner/repo/issues/123'
+  link_text TEXT NOT NULL,
+  link_type TEXT DEFAULT 'reference',           -- 'reference' | 'extends' | 'implements' | 'supersedes' | 'requires'
+  metadata JSONB DEFAULT '{}'
+);
+asterion.doc_revisions — Version history
+CREATE TABLE asterion.doc_revisions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  section_id UUID REFERENCES asterion.doc_sections(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  content_explorer TEXT,
+  edited_by UUID,
+  edit_summary TEXT,
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+Document Type Taxonomy
+TypePurposeExampleconceptCore ideas, mental models"What is Structural Tension?"guideHow-to, step-by-step"Creating Your First Tension"rispecRISE-style rebuildable spec"COAIA Specification"apiAPI reference, endpoints"Tensions API Reference"playbookOperational procedures"Incident Response Playbook"diagramVisual-first explanation"The Seven Layers Map"storyNarrative case study"How Project Alpha Resolved"decisionADR-style record"Why We Chose Neon + Upstash"
+
+Content Origins
+OriginPurposeAudienceAcademicTheory, methodology, research foundationArchitects, researchersTechnicalImplementation, code, architectureEngineers, developersNarrativeStories, examples, case studiesEveryoneOperationalPlaybooks, API usage, incident flows, runtime proceduresOperators, admins
+
+Diagram Type Taxonomy
+Diagram TypeRenders AsPurposelayer_mapReact Flow interactive7-layer architecture visualizationtension_chartMermaidCurrent reality → Desired outcometelescope_treeMermaid/React FlowRecursive decomposition hierarchyruntime_loopMermaidGermination → Assimilation → Completion cycleproject_lensReact FlowCross-repo orchestration viewevent_timelineMermaid timelineImmutable execution historynarrative_threadMermaidStory progression beatsgithub_syncMermaidIssue ↔ Tension synchronization flow
+
+Libraries
+Install
+pnpm add mermaid @xyflow/react
+npx shadcn@latest add https://mermaidcn.vercel.app/r/mermaid.json
+Why these choices:
+
+mermaidcn: shadcn-compatible, zoom/pan built-in, handles dynamic imports
+@xyflow/react (React Flow): For the interactive layer map / topology views
+Both MIT licensed, well-maintained
+
+
+File Structure
+app/
+  docs/
+    page.tsx                    # Docs landing / index
+    [slug]/
+      page.tsx                  # Individual doc page
+    edit/
+      [slug]/
+        page.tsx                # Admin edit page with revision history
+        
+components/
+  docs/
+    docs-sidebar.tsx            # Navigation tree by origin
+    docs-content.tsx            # Renders sections based on type
+    docs-section.tsx            # Individual section renderer
+    docs-diagram.tsx            # Mermaid diagram with zoom/pan
+    docs-interactive-diagram.tsx # React Flow layer map
+    docs-audience-toggle.tsx    # Technical/Explorer Mode switcher
+    docs-admin-editor.tsx       # Section editor with dual pane
+    docs-callout.tsx            # Info/warning/tip/methodology boxes
+    docs-methodology.tsx        # Educational "why it matters" blocks
+    docs-provenance.tsx         # Source reference display
+    docs-artifact-links.tsx     # Links to tensions, entities, layers, etc.
+    docs-revision-history.tsx   # Version history viewer
+    docs-search.tsx             # Full-text search across all fields
+    
+lib/
+  asterion/
+    docs.ts                     # CRUD operations for doc_pages, doc_sections, doc_revisions
+
+
+Key Components
+1. Audience Toggle (Top Header)
+
+Sticky header with toggle switch
+Uses React Context to propagate mode
+Labels: "Technical" / "Explorer Mode"
+Persisted in localStorage
+Visual indicator of current mode
+
+2. Docs Sidebar
+
+Tree navigation grouped by origin (Academic, Technical, Narrative, Operational)
+Collapsible sections
+Status badges (draft, canonical, deprecated)
+Doc type icons
+Current page highlight
+Shows page titles based on audience mode
+
+3. Section Renderer
+Based on section_type:
+
+text: Rich text with markdown-like formatting
+diagram: Mermaid diagram with zoom/pan controls
+callout: Info/warning/tip/methodology boxes
+code: Syntax highlighted code blocks
+interactive: Embedded React Flow for topology maps
+methodology: Educational "why framing matters" blocks with expansion
+
+4. Methodology Callouts
+Educational blocks that teach reasoning:
+<MethodologyCallout type="why">
+  <strong>Why does this matter?</strong>
+  Structural tension isn't just a productivity hack — it's how creative systems 
+  naturally resolve. When you frame work as "desired outcome vs current reality" 
+  instead of "problem to solve," you engage fundamentally different cognitive 
+  patterns that lead to better solutions.
+</MethodologyCallout>
+5. Provenance Display
+Shows where ideas came from:
+
+GitHub issue references (clickable)
+Related tensions
+Source files
+External URLs
+Video timestamps
+
+6. Admin Editor
+
+Inline editing when admin mode active
+Two-pane editor: Technical content | Explorer Mode content
+audience_notes editor for audience-specific guidance
+Live preview for both modes
+Mermaid editor with preview
+Reorder sections via drag
+Revision history with diff view
+Edit summary required for changes
+
+7. Search
+Full-text search covering:
+
+title, content
+tags
+origin, doc_type
+linked tension/entity/layer names
+source references
+
+
+Audience Adaptation Strategy
+Technical Mode
+
+Full technical terminology
+Detailed implementation notes
+Code examples
+Academic citations where relevant
+RISE/spec patterns for rebuildable specifications
+
+Explorer Mode (Not "dumbed down" — accessible cognition)
+
+Same concepts, accessible language
+Metaphors and analogies
+More visual emphasis
+Shorter sections with expansion options
+Encouraging, curious tone
+audience_notes can specify entirely different diagrams or sequences
+
+Example transformation:
+
+Technical: "Structural tension represents the gap between current reality and desired outcome, creating a natural resolution force that drives creative action."
+Explorer: "Imagine a rubber band stretched between where you are now and where you want to be. The band naturally wants to snap back together — that's the energy that helps you make progress! This is called structural tension, and it's why framing your work as 'I want X but currently have Y' is so powerful."
+
+
+RISE/Spec Mode Pattern
+For rispec documents, follow the rebuildable specification pattern:
+
+Reverse-engineer: Understand existing behavior
+Intent-extract: Capture the why
+Specify: Define precise requirements
+Export: Generate actionable output
+
+These docs should be machine-parseable for agent consumption.
+
+Seed Content
+Initial documentation pages:
+Academic Origin
+
+What is Structural Tension? (concept) — Fritz methodology foundation
+MMOT: The Course Correction Loop (concept) — Self-witnessing evaluation
+Phases: Germination, Assimilation, Completion (concept) — Lifecycle dynamics
+
+Technical Origin
+
+The Seven Layers (diagram) — Runtime, Memory, Governance, PDE, Docs, Security, Operator
+Tensions API Reference (api) — Endpoints and usage
+Database Schema (guide) — Table relationships
+
+Narrative Origin
+
+Welcome to Asterion (story) — Introduction with personality
+Projects Are Lenses (concept) — Cross-repo orchestration metaphor
+Telescoping: Infinite Zoom (concept) — Recursive decomposition narrative
+
+Operational Origin
+
+GitHub Sync (playbook) — Issue ↔ Tension synchronization
+Events and Archaeology (guide) — Using the event log for replay/debugging
+Narrative Threads (playbook) — Multi-narrative documentation
+
+Each with:
+
+Both audience variants
+At least one diagram
+Provenance references
+Artifact links
+
+
+API Design
+GET /api/docs
+Returns page tree with origins, types, statuses for navigation
+Query params: origin, doc_type, status, search
+GET /api/docs/[slug]
+Returns page with all sections, sorted by sort_order
+PATCH /api/docs/[slug]
+Updates page metadata (title, status, tags, etc.)
+PATCH /api/docs/[slug]/sections/[id]
+Updates section content (creates revision automatically)
+Requires: edit_summary
+POST /api/docs/[slug]/sections
+Adds new section to page
+GET /api/docs/[slug]/sections/[id]/revisions
+Returns revision history for section
+POST /api/docs/search
+Full-text search across all doc fields
+
+Implementation Order
+
+Create database tables (doc_pages, doc_sections, doc_links, doc_revisions)
+Install mermaid + mermaidcn components
+Create lib/asterion/docs.ts with CRUD + revision logic
+Create API routes
+Build docs components (sidebar, content, diagram, toggle, callout, methodology)
+Build docs pages (/docs, /docs/[slug])
+Build admin editor with revision history
+Seed initial content with both audience variants
+Implement search
+
+
+Indexes
+CREATE INDEX idx_doc_pages_origin ON asterion.doc_pages(origin);
+CREATE INDEX idx_doc_pages_doc_type ON asterion.doc_pages(doc_type);
+CREATE INDEX idx_doc_pages_status ON asterion.doc_pages(status);
+CREATE INDEX idx_doc_pages_tags ON asterion.doc_pages USING GIN(tags);
+CREATE INDEX idx_doc_sections_page ON asterion.doc_sections(page_id);
+CREATE INDEX idx_doc_revisions_section ON asterion.doc_revisions(section_id);
+CREATE INDEX idx_doc_revisions_created ON asterion.doc_revisions(created_at DESC);

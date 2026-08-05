@@ -1,0 +1,88 @@
+The user is reporting that when they try to create a new structural tension, nothing appears. They're not seeing any errors in the console either. Let me investigate this systematically:
+
+First, I should check the database to see if any tensions were actually saved
+Then check the API route for creating tensions
+Check the frontend form/dialog that creates tensions
+Check the list component that displays tensions
+
+Let me start by checking if there's data in the database, then trace through the code.Let me investigate systematically - first checking if data exists in the database, then tracing through the API and frontend code:
+
+Checked tensions dataExplore • 2 FilesExplore • 2 Files • 1 SearchNow let me check the database for existing data and also check the validation logic:
+
+Checked tensions dataExplore • 2 FilesThe database shows one tension exists ("A painting I love no 1"). So data IS being saved. The issue is the list not refreshing after creation. Looking at the code:
+
+1. In `tensions/page.tsx`, `handleCreate` calls `mutate('/api/tensions')` after creation
+2. But the `useTensions` hook may be using a different URL with query params (like `?phase=all` or empty)
+
+
+The problem is the SWR cache key mismatch. When there's no filter, the hook uses `/api/tensions`, but when filtering is applied, it uses `/api/tensions?phase=germination` etc. The `mutate('/api/tensions')` won't invalidate those filtered URLs.
+
+Let me fix this by:
+
+1. Adding better error handling and console logging to debug
+2. Using SWR's mutate with a regex matcher to invalidate all tensions queries
+3. Adding visual feedback when creation succeeds or fails
+
+
+Added useSWRConfigImproved error handlingNow I need to add the error display in the dialog:
+
+Read updated pageNow I need to add the error display in the dialog. Let me add it after the Layer select and before DialogFooter:
+
+Added error displayNow I also need to reset the error when the dialog opens:
+
+Reset error on openNow let me check the console logs by looking at the debug file to see what's happening when you try to create:
+
+Read debug logsFound the root cause. The error is clear:
+
+```plaintext
+Error: This function can now be called only as a tagged-template function: sql`SELECT ${value}`, not sql("SELECT $1", [value], options).
+```
+
+The Neon serverless driver's `sql` function requires tagged template literals, not function calls with parameters. The `getTensions` function dynamically builds a query string and tries to call `sql(query, params)` which doesn't work with the new Neon driver.
+
+I need to fix the `getTensions` function to use `sql.query()` for dynamic queries:
+
+Read tensions.tsI need to rewrite the `getTensions` function to use tagged template literals conditionally, or use `sql.query()` for dynamic queries. Let me check the Neon driver docs and fix the dynamic query issue:
+
+Fixed getTensions queryNow I need to fix the other functions that use dynamic queries. Let me search for other `sql(query` patterns:
+
+Found dynamic queriesThere are multiple files using the old pattern. Let me fix them all:
+
+Fixed remaining queriesFixed db.ts queryRead data.tsI can see there are two functions with dynamic queries in `data.ts`: `getEntities` and `getEvents`. Let me fix them:
+
+Fixed getEntitiesFixed getEventsNow let me fix the docs data layer as well:
+
+Read docs data.tsI need to fix the three dynamic query calls in docs/data.ts as well:
+
+Fixed docs data.tsWait, that only replaced one. Let me check and fix the remaining ones:
+
+Checked remaining issuesFixed remaining queriesNow let me also check and fix the searchDocs function which also uses a dynamic query with sql():
+
+Found sql with backtickThat's a different pattern - it's using `sql(` with a string argument and then params. Let me read that section and fix it:
+
+Read searchDocsFixed searchDocs queryNow let me clean up the debug console.logs I added earlier since the fix is in place:
+
+Removed debug logsv4+72/-32RestoreNow let me verify the fix is complete by checking the logs:
+
+Checked logs after fixThe fix is working. Looking at the logs, after my changes compiled at `17:16:56.126Z`, the subsequent `GET /api/tensions` requests are now returning **200** instead of 500 errors. The tensions API is working now - you can see the last several requests all returning `200` successfully:
+
+```plaintext
+[2026-05-13T17:17:32.630Z] GET /api/tensions 200 in 114ms
+[2026-05-13T17:17:34.668Z] GET /api/tensions 200 in 19ms  
+...
+[2026-05-13T17:19:12.319Z] GET /api/tensions 200 in 20ms
+```
+
+The root cause was that the Neon serverless driver changed its API - `sql()` now only works as a tagged template literal (`sql`SELECT * FROM table WHERE id = ${id}``), not as a function call with parameters (`sql(queryString, params)`). For dynamic queries with variable WHERE clauses, you need to use `sql.query()` instead.
+
+**Summary of fixes:**
+
+1. Fixed `getTensions()` in `lib/asterion/tensions.ts` - the main issue causing tensions not to load
+2. Fixed `updateTension()` in `lib/asterion/tensions.ts`
+3. Fixed `query()` helper in `lib/asterion/db.ts`
+4. Fixed `getEntities()` and `getEvents()` in `lib/asterion/data.ts`
+5. Fixed `getDocPages()`, `updateDocPage()`, `updateDocSection()`, and `searchDocs()` in `lib/docs/data.ts`
+6. Also improved the create tension dialog with proper error handling and SWR cache invalidation
+
+
+Try creating a new structural tension now - it should save and appear in the list immediately.

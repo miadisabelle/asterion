@@ -1,0 +1,56 @@
+Created doc_revisionsThought for 1sDatabase schema complete. Now let me install the diagram libraries and build the documentation lib layer:
+
+Installed diagram libs
+Moved to lib layerApplied changesCreated doc typesCreated doc data layerCreated doc hooksCreated doc index
+Moved to UI componentsNow building the UI components for interactive documentation:
+
+Created doc calloutCreated doc linksNow creating the API routes and documentation pages:
+
+
+Moved to doc pagesCreated search APINow creating the documentation pages and layout:
+
+Created doc detail pageNow let me build the admin editor:
+
+
+Moved to admin editorCreated admin editor pageNow let me seed the initial documentation content:
+
+
+Moved to seed contentCreated seed APIv2Restore
+Completed all tasksThe interactive documentation system is now complete. Here's what was built:
+
+**Database Schema (4 new tables)**
+
+- `doc_pages`: Pages with 4 origins (academic/technical/narrative/operational), 8 doc types, lifecycle status, provenance
+- `doc_sections`: Content with dual audience (Technical/Explorer), section types (text/diagram/callout/code/interactive)
+- `doc_links`: Rich artifact relations to tensions, entities, layers, projects, events, threads, GitHub
+- `doc_revisions`: Version history with edit summaries
+
+
+**Interactive Components**
+
+- `AudienceToggle`: Header switch between Technical and Explorer modes (persisted in localStorage)
+- `MermaidDiagram`: Live Mermaid.js rendering with preset templates for all 8 Asterion diagram types
+- `DocCallout`: Educational callouts including "Why This Matters" methodology teaching blocks
+- `DocSidebar`: Hierarchical navigation grouped by origin
+- `DocSearch`: Full-text search across content, tags, and artifact links
+- `DocSectionRenderer`: Audience-aware content rendering with diagram preview
+
+
+**Pages**
+
+- `/docs`: Origin-based landing page with Explorer mode support
+- `/docs/[slug]`: Dynamic doc viewer with linked artifacts
+- `/docs/admin/[slug]`: Dual-pane editor with live Mermaid preview, revision history, and preset diagram insertion
+
+
+**Seed Content (6 pages)**
+
+- "What is Asterion?" - Introduction with 7-layer map
+- "Structural Tension Methodology" - Fritz methodology with tension chart diagram
+- "Telescoping" - Recursive decomposition with tree diagram
+- "Projects Are Lenses" - Cross-repo orchestration
+- "MMOT Evaluation" - Self-witnessing correction loop
+- "API Quickstart" - Operational reference
+
+
+To seed the documentation, make a POST request to `/api/docs/seed`. The audience toggle lets users switch between Technical (full engineering detail) and Explorer (accessible, metaphor-rich explanations for advanced 12-year-olds).

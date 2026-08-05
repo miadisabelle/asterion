@@ -1,0 +1,251 @@
+<title>Ceremony Event Architecture — Phase 1</title>
+<style>
+  :root{
+    --ground:#F4F6F3; --ink:#20241F; --muted:#5C665B; --line:#D8DDD4;
+    --cedar:#3E6B4F; --ember:#B65C2E; --sleep:#6B7A99;
+    --card:#FCFDFB; --code:#EDF1EA;
+  }
+  @media (prefers-color-scheme: dark){:root{
+    --ground:#171A16; --ink:#E8ECE4; --muted:#9AA697; --line:#2E342C;
+    --cedar:#7FAE8F; --ember:#D98B5F; --sleep:#93A3C4;
+    --card:#1E231D; --code:#242A22;
+  }}
+  :root[data-theme="dark"]{
+    --ground:#171A16; --ink:#E8ECE4; --muted:#9AA697; --line:#2E342C;
+    --cedar:#7FAE8F; --ember:#D98B5F; --sleep:#93A3C4;
+    --card:#1E231D; --code:#242A22;
+  }
+  :root[data-theme="light"]{
+    --ground:#F4F6F3; --ink:#20241F; --muted:#5C665B; --line:#D8DDD4;
+    --cedar:#3E6B4F; --ember:#B65C2E; --sleep:#6B7A99;
+    --card:#FCFDFB; --code:#EDF1EA;
+  }
+  body{background:var(--ground);color:var(--ink);font:16px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif;margin:0;}
+  main{max-width:76ch;margin:0 auto;padding:3rem 1.25rem 5rem;display:flex;flex-direction:column;gap:2.75rem;}
+  h1,h2,h3{font-family:"Iowan Old Style",Palatino,"Palatino Linotype",Georgia,serif;line-height:1.2;text-wrap:balance;margin:0;}
+  h1{font-size:2.1rem;font-weight:600;}
+  h2{font-size:1.45rem;font-weight:600;}
+  h3{font-size:1.05rem;font-weight:600;}
+  p{margin:0;}
+  .eyebrow{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--cedar);font-weight:600;}
+  .lede{font-size:1.12rem;color:var(--muted);max-width:62ch;}
+  section{display:flex;flex-direction:column;gap:1rem;}
+  header.hero{display:flex;flex-direction:column;gap:.9rem;border-bottom:1px solid var(--line);padding-bottom:2rem;}
+  code,.mono{font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:.86em;background:var(--code);padding:.08em .35em;border-radius:3px;}
+  .legend{display:flex;gap:1.4rem;flex-wrap:wrap;font-size:.85rem;color:var(--muted);}
+  .legend span{display:inline-flex;align-items:center;gap:.45rem;}
+  .dot{width:.7rem;height:.7rem;border-radius:50%;display:inline-block;}
+  .diagram-wrap{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:1rem;}
+  .grounds{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem;}
+  .ground-card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:1.1rem 1.2rem;display:flex;flex-direction:column;gap:.55rem;}
+  .ground-card .state{font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;font-weight:700;}
+  .state.alive{color:var(--ember);} .state.asleep{color:var(--sleep);} .state.wheel{color:var(--cedar);}
+  .ground-card p{font-size:.92rem;color:var(--muted);}
+  .aspects{display:flex;flex-direction:column;gap:1.1rem;counter-reset:aspect;}
+  .aspect{background:var(--card);border:1px solid var(--line);border-left:3px solid var(--cedar);border-radius:6px;padding:1rem 1.2rem;display:flex;flex-direction:column;gap:.4rem;}
+  .aspect h3::before{counter-increment:aspect;content:counter(aspect,upper-alpha) " · ";color:var(--cedar);}
+  .aspect p{font-size:.95rem;}
+  .aspect .wc{font-size:.72rem;color:var(--muted);}
+  table{border-collapse:collapse;width:100%;font-size:.9rem;}
+  th,td{text-align:left;padding:.5rem .7rem;border-bottom:1px solid var(--line);vertical-align:top;}
+  th{font-size:.75rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);}
+  .table-wrap{overflow-x:auto;}
+  .lineage{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;font-size:.88rem;}
+  .lineage .ep{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:.25rem .8rem;white-space:nowrap;}
+  .lineage .ep.now{border-color:var(--cedar);color:var(--cedar);font-weight:600;}
+  .lineage .arrow{color:var(--muted);}
+  .reserved{border:1px dashed var(--line);border-radius:8px;padding:1.2rem 1.3rem;color:var(--muted);display:flex;flex-direction:column;gap:.6rem;}
+  .reserved h2{color:var(--ink);}
+  ul{margin:0;padding-left:1.2rem;display:flex;flex-direction:column;gap:.35rem;}
+  li{font-size:.94rem;}
+  footer{border-top:1px solid var(--line);padding-top:1.4rem;font-size:.82rem;color:var(--muted);display:flex;flex-direction:column;gap:.3rem;}
+  a{color:var(--cedar);}
+</style>
+
+<main>
+<header class="hero">
+  <span class="eyebrow">Miadi · Ceremony <code>ceremony:1785951385863:ewv6e</code> · East · tlid 2608051332</span>
+  <h1>The Event Path and the Sleeping Twins</h1>
+  <p class="lede">Phase 1 of the ceremony-event architecture inquiry: how a working session becomes events, where those events actually land today, and why the typed spine that should carry them lies built, tested, and unwired. Four grounds surveyed with receipts; six adjustments named, each in under 55 words.</p>
+  <div class="legend">
+    <span><span class="dot" style="background:var(--ember)"></span>alive today (shell)</span>
+    <span><span class="dot" style="background:var(--sleep)"></span>built, asleep (TypeScript)</span>
+    <span><span class="dot" style="background:var(--cedar)"></span>the wheel (ceremony layer)</span>
+  </div>
+</header>
+
+<section>
+  <h2>1 · The flow as it exists today</h2>
+  <div class="diagram-wrap">
+  <svg viewBox="0 0 860 430" width="860" height="430" role="img" aria-label="Event flow diagram: live shell path in ember, sleeping TypeScript packages in slate, ceremony layer in cedar" font-family="ui-monospace,Menlo,monospace" font-size="12">
+    <defs>
+      <marker id="arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="var(--muted)"/></marker>
+      <marker id="arrE" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="var(--ember)"/></marker>
+    </defs>
+    <!-- live path -->
+    <rect x="20" y="30" width="150" height="46" rx="6" fill="none" stroke="var(--ember)" stroke-width="1.6"/>
+    <text x="95" y="49" text-anchor="middle" fill="var(--ink)">Claude session</text>
+    <text x="95" y="65" text-anchor="middle" fill="var(--muted)">native hooks ×12</text>
+
+    <rect x="230" y="30" width="180" height="46" rx="6" fill="none" stroke="var(--ember)" stroke-width="1.6"/>
+    <text x="320" y="49" text-anchor="middle" fill="var(--ink)">shell hooks (live)</text>
+    <text x="320" y="65" text-anchor="middle" fill="var(--muted)">/src/scripts/claude_hooks</text>
+
+    <rect x="470" y="30" width="180" height="46" rx="6" fill="none" stroke="var(--ember)" stroke-width="1.6"/>
+    <text x="560" y="49" text-anchor="middle" fill="var(--ink)">_sessiondata/&lt;uuid&gt;</text>
+    <text x="560" y="65" text-anchor="middle" fill="var(--muted)">~16 JSONL kinds + plans/</text>
+
+    <line x1="170" y1="53" x2="228" y2="53" stroke="var(--ember)" stroke-width="1.6" marker-end="url(#arrE)"/>
+    <line x1="410" y1="53" x2="468" y2="53" stroke="var(--ember)" stroke-width="1.6" marker-end="url(#arrE)"/>
+
+    <!-- observer -->
+    <rect x="470" y="130" width="180" height="46" rx="6" fill="none" stroke="var(--cedar)" stroke-width="1.6"/>
+    <text x="560" y="149" text-anchor="middle" fill="var(--ink)">ceremony-session-observer</text>
+    <text x="560" y="165" text-anchor="middle" fill="var(--muted)">reads dir · links in Redis</text>
+    <line x1="560" y1="76" x2="560" y2="128" stroke="var(--muted)" stroke-width="1.3" marker-end="url(#arr)"/>
+
+    <!-- wheel -->
+    <rect x="230" y="130" width="180" height="46" rx="6" fill="none" stroke="var(--cedar)" stroke-width="1.6"/>
+    <text x="320" y="149" text-anchor="middle" fill="var(--ink)">medicine-wheel MCP</text>
+    <text x="320" y="165" text-anchor="middle" fill="var(--muted)">ceremony:* → Upstash</text>
+    <line x1="410" y1="153" x2="468" y2="153" stroke="var(--cedar)" stroke-width="1.3" marker-end="url(#arr)"/>
+
+    <!-- shared redis -->
+    <rect x="230" y="228" width="420" height="52" rx="6" fill="none" stroke="var(--line)" stroke-width="1.4"/>
+    <text x="440" y="248" text-anchor="middle" fill="var(--ink)">ONE Upstash Redis + ONE Neon Postgres (byte-identical URLs)</text>
+    <text x="440" y="266" text-anchor="middle" fill="var(--muted)">asterion:* named · ceremony:* stamped · observer keys UNPREFIXED</text>
+    <line x1="320" y1="176" x2="320" y2="226" stroke="var(--muted)" stroke-width="1.3" marker-end="url(#arr)"/>
+    <line x1="560" y1="176" x2="560" y2="226" stroke="var(--muted)" stroke-width="1.3" marker-end="url(#arr)"/>
+
+    <!-- asterion -->
+    <rect x="690" y="228" width="150" height="52" rx="6" fill="none" stroke="var(--cedar)" stroke-width="1.6"/>
+    <text x="765" y="248" text-anchor="middle" fill="var(--ink)">asterion (Vercel)</text>
+    <text x="765" y="266" text-anchor="middle" fill="var(--muted)">asterion.* · no session in</text>
+    <line x1="690" y1="254" x2="652" y2="254" stroke="var(--muted)" stroke-width="1.3" marker-end="url(#arr)"/>
+
+    <!-- sleeping twins -->
+    <rect x="20" y="330" width="200" height="52" rx="6" fill="none" stroke="var(--sleep)" stroke-width="1.6" stroke-dasharray="6 4"/>
+    <text x="120" y="350" text-anchor="middle" fill="var(--ink)">@miadi/hooks-core 0.5.0</text>
+    <text x="120" y="367" text-anchor="middle" fill="var(--muted)">typed twin of the shell — unwired</text>
+
+    <rect x="280" y="330" width="220" height="52" rx="6" fill="none" stroke="var(--sleep)" stroke-width="1.6" stroke-dasharray="6 4"/>
+    <text x="390" y="350" text-anchor="middle" fill="var(--ink)">@miadi/hooks-gateway 0.1.0</text>
+    <text x="390" y="367" text-anchor="middle" fill="var(--muted)">receipts + streams — no process runs it</text>
+
+    <rect x="560" y="330" width="280" height="52" rx="6" fill="none" stroke="var(--sleep)" stroke-width="1.6" stroke-dasharray="6 4"/>
+    <text x="700" y="350" text-anchor="middle" fill="var(--ink)">asterion queue/idempotency/locks</text>
+    <text x="700" y="367" text-anchor="middle" fill="var(--muted)">exported — no route imports them</text>
+
+    <text x="20" y="315" fill="var(--sleep)" font-weight="bold" font-size="11" letter-spacing="2">BUILT AND ASLEEP</text>
+  </svg>
+  </div>
+  <p style="font-size:.9rem;color:var(--muted)">A separate bash script, <code>find_artifact_session.sh</code>, walks behind this whole flow re-deriving provenance by grep — the exact question the sleeping envelope's <code>trace_id</code> + ledger were designed to answer.</p>
+</section>
+
+<section>
+  <h2>2 · The four grounds</h2>
+  <div class="grounds">
+    <div class="ground-card">
+      <span class="state wheel">ceremony-session-observer</span>
+      <h3>The witness-room</h3>
+      <p>Next.js UI (3950/3949). Reads only <code>REDIS_URL</code> + <code>SESSION_DATA_DIR</code> — while carrying 24 dead credential keys copied from asterion. Hand-rolled session reader (3rd copy), unprefixed Redis link keys, re-links destroy the first-witness timestamp. Scans ~3,985 dirs per list; ignores the existing <code>session_index.jsonl</code>.</p>
+    </div>
+    <div class="ground-card">
+      <span class="state wheel">asterion</span>
+      <h3>The factory surface</h3>
+      <p>Next.js on Vercel; Postgres <code>asterion.*</code> schema — tensions, entities, relations, events, beats. Its <code>entities.external_id/external_source</code> seam is exactly where sessions would enter the graph — nothing populates it. <code>relation_type</code> is a free string inside a DB unique key.</p>
+    </div>
+    <div class="ground-card">
+      <span class="state asleep">hooks-core 0.5.0</span>
+      <h3>The typed twin</h3>
+      <p>22 canonical events, versioned envelope, sha256 idempotency keys, byte-parity file sinks, permission-with-evidence, plan provenance. Zero deps, tested — and no hook invokes it. The observer-interpreter role doc already specifies the ceremony-link contract the observer rebuilt differently.</p>
+    </div>
+    <div class="ground-card">
+      <span class="state asleep">hooks-gateway 0.1.0</span>
+      <h3>The receipt door</h3>
+      <p><code>POST /events</code> → validate envelope → first-witness ledger (202 accepted / 200 duplicate, attempts counted, side-effects never re-run) → stream fan-out. Memory ledger only; Postgres + Redis/NATS remain SPEC. No process runs it; no sink posts to it.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>3 · Adjusting the observer in relation to asterion</h2>
+  <p class="lede" style="font-size:.95rem">Six aspects, each under 55 words, as commissioned.</p>
+  <div class="aspects">
+    <div class="aspect"><h3>Environment: subtract to what the code reads</h3>
+      <p>The observer's <code>.env</code> is asterion's Vercel pull plus two lines. Code reads exactly <code>REDIS_URL</code> and <code>SESSION_DATA_DIR</code>. Delete the other 24 keys — live Neon and Upstash credentials in an app that never opens them are pure exposure. Decide the duplicated <code>REDIS_URL</code> on purpose; today position decides it.</p><span class="wc">54 words</span></div>
+    <div class="aspect"><h3>Namespace the keyspace, or inherit asterion's discipline</h3>
+      <p>Observer, asterion, and the wheel share one Upstash database. Asterion prefixes everything (<code>asterion:*</code>); the wheel stamps <code>ceremony:*</code>; the observer writes bare keys. Adopt a prefix (<code>observer:*</code> or the wheel's own <code>session-link</code> helper) so three tenants stop sharing an unmarked commons.</p><span class="wc">43 words</span></div>
+    <div class="aspect"><h3>Retire the duplicate readers — the promise already written</h3>
+      <p>The observer's <code>lib/sessions.ts</code> and <code>lib/redis.ts</code> are line-for-line twins of medicine-wheel's <code>session-reader</code> and <code>session-link</code>. Its own KINSHIP.md records the extraction and promises the swap. Make the swap: two local forks become two imports, and every fix lands once.</p><span class="wc">40 words</span></div>
+    <div class="aspect"><h3>Speak canonical events, not one agent's dialect</h3>
+      <p>The observer hand-parses Claude's native hook names, so 364&nbsp;MB of hermes events — and every codex, gemini, openclaw session — is invisible to it. Consuming hooks-core's <code>NATIVE_EVENT_MAP</code> + canonical names makes it the witness of every agent in the house, sorted by <code>captured_at</code>, not a field nobody stamps.</p><span class="wc">47 words</span></div>
+    <div class="aspect"><h3>Give the link record provenance and first-witness honesty</h3>
+      <p>Today's link is <code>{ceremony_id, session_id, linked_at, notes}</code> — and re-linking overwrites <code>linked_at</code>, destroying the first witness. Carry hooks-core's <code>PlanProvenance</code> fields (source session, trace id, cwd) and the ledger's first-received semantics: a relation you can replay, not a timestamp that lies.</p><span class="wc">40 words</span></div>
+    <div class="aspect"><h3>Feed from the index, not the full scan</h3>
+      <p>Every listing walks ~3,985 session directories; search walks them twice. <code>_sessiondata/data/session_index.jsonl</code> already exists, appended on every session start by the very pipeline the observer watches. Read the index, fall back to scan — the observer becomes instant on the data it already trusts.</p><span class="wc">43 words</span></div>
+  </div>
+</section>
+
+<section>
+  <h2>4 · How both are consumed with hooks-core and hooks-gateway</h2>
+  <div class="table-wrap"><table>
+    <tr><th>Seam</th><th>Today</th><th>Consumed shape</th></tr>
+    <tr><td>Event capture</td><td>Shell hooks write JSONL directly</td><td>Same hooks call <code>miadi-hooks</code> (hooks-core CLI) — byte-parity sinks already written for this cutover; Phase 5 of the migration plan, still open</td></tr>
+    <tr><td>Event transport</td><td>None — files only</td><td>hooks-core <code>httpSink</code> (opt-in, network-free by default) posts envelopes to hooks-gateway; the gateway's receipt becomes the platform's first-witness record</td></tr>
+    <tr><td>Observer</td><td>Re-parses raw files, hand-typed</td><td>Becomes the gateway's <em>read model</em>: renders canonical events from any agent; its ceremony-link write goes through the wheel's own session-link with envelope provenance</td></tr>
+    <tr><td>Asterion</td><td>Island — no session ever enters</td><td>A gateway stream publisher writes <code>asterion.events</code> with <code>entities(external_id=session_id, external_source='_sessiondata')</code> — sessions finally become graph nodes; its built idempotency guards the door</td></tr>
+    <tr><td>Provenance queries</td><td><code>find_artifact_session.sh</code> greps everything</td><td><code>trace_id</code> + ledger answer "who touched this artifact" as a query, not an excavation</td></tr>
+  </table></div>
+</section>
+
+<section>
+  <h2>5 · Ceremony record and lineage</h2>
+  <p style="font-size:.94rem">This inquiry is itself held as a ceremony on the chronicle wheel, with three narrative beats recorded so far: the borrowed wardrobe (env inheritance), the sleeping twins (unwired spine), and the unmarked commons (shared keyspace).</p>
+  <div class="lineage">
+    <span class="ep">ep-017 · witness prelude</span><span class="arrow">→</span>
+    <span class="ep">ep-030 · adequate observability</span><span class="arrow">→</span>
+    <span class="ep">ep-031 · accountability rail</span><span class="arrow">→</span>
+    <span class="ep">ep-035 · witness-ceremony bridge</span><span class="arrow">→</span>
+    <span class="ep now">this work · the bridge built</span>
+  </div>
+  <p style="font-size:.88rem;color:var(--muted)">Episode 035 recorded the bridge as pre-production — "no new implementation, no audio by default." This phase implements what it named, and carries the voice it deliberately withheld.</p>
+</section>
+
+<section>
+  <span class="eyebrow">Phase 2 · surveyed 2026-08-05</span>
+  <h2>6 · Medicine-wheel consumption — the swap is measured, not proposed</h2>
+  <p style="font-size:.95rem">The suite sits at <code>@medicine-wheel/*@0.5.8</code> on npm. For each ground, the consumption target and what survives at route level:</p>
+  <div class="table-wrap"><table>
+    <tr><th>Ground</th><th>Consumes</th><th>The measurement</th></tr>
+    <tr><td>observer</td><td><code>session-reader</code> + <code>data-store</code></td><td><strong>8/8 session symbols and 7/8 redis symbols line-for-line identical</strong> — the swap deletes ~410 lines and gains Upstash auto-detection + connect timeouts. Three behaviors move to routes, not lost: the SCAN fallback, <code>sessionCount</code> enrichment, and field defaulting. KINSHIP.md promised exactly this.</td></tr>
+    <tr><td>asterion</td><td><code>ontology-core</code> vocabulary, <code>relational-query</code>, <code>graph-viz</code></td><td><code>Entity</code>/<code>Relation</code> structurally duplicate <code>RelationalNode</code>/<code>RelationalEdge</code> — minus the accountability fields (<code>strength</code>, <code>ceremony_honored</code>, <code>obligations</code>). Its <code>Phase</code> union is <em>exactly</em> <code>TensionPhase</code>. The hand-written recursive CTE and the 10-iteration force-sim both have package replacements; <code>@xyflow/react</code> is declared and used nowhere.</td></tr>
+    <tr><td>hooks pair</td><td><code>data-store</code> as first stream consumer</td><td>No symbol collision — producer/consumer. The gateway's empty <code>StreamPublisher</code> seam plugs into <code>logCeremony</code>/<code>createNode</code>/<code>createEdge</code>/<code>linkSessionToCeremony</code> with no new code. The taxonomy fix rides along: <code>NATIVE_EVENT_MAP</code> already translates five agents; every Claude-only reader is a fork refusing a translation table.</td></tr>
+  </table></div>
+  <p style="font-size:.9rem;color:var(--muted)">Honest non-moves: <code>infra</code>'s ServiceFacet/PortBinding has no referent on Vercel-serverless asterion (no unit, no port, no host); <code>perception-layer</code>'s ingest is film-transcript-shaped, not envelope-shaped — a graph-seed target, not a gateway consumer. Sharpest small fact: hooks-core's index sink writes <code>data/session_index.jsonl</code> into the exact directory the session-reader <em>explicitly skips</em>.</p>
+</section>
+
+<section>
+  <span class="eyebrow">Phase 2 · surveyed 2026-08-05</span>
+  <h2>7 · Forgewright's Graph — the seat named Session that no one was shown to</h2>
+  <p style="font-size:.95rem"><code>@forgewright/platform</code> is the graph-based runtime with ceremony governance — and its Graph tab renders a <strong>hardcoded placeholder while a complete GraphView sits unreferenced</strong> in <code>src/components/designer/graph/</code>. The fourth room with a finished tool asleep on the bench.</p>
+  <ul>
+    <li><strong>The contract is the asset:</strong> a Zod-first graph schema — 10 node types <em>including <code>Session</code></em>, 11 edge types, OCAP on every node and edge (sacred nodes render at 0.35 opacity — consent as visual law), KuzuDB with honest in-memory fallback.</li>
+    <li><strong>Session is first-class and unborn:</strong> typed, colored (<code>#38bdf8</code>), scope-filtered (<code>ScopeMode: 'session'</code> is the default) — and nothing anywhere mints a Session node. <code>ingestSession</code> is one missing function. The chronicle client already carries <code>sessionId</code> across the wire and discards it at the UI boundary.</li>
+    <li><strong>Presenting the Asterion graph there:</strong> forgewright has zero knowledge of asterion today. The minimal path: add a <code>Tension</code> node type (its <code>Phase</code> vocabulary is pre-agreed with <code>ontology-core</code>), adapt asterion's existing <code>GET /api/graph</code> shape, synthesize OCAP at the boundary — the one real impedance, because asterion carries no consent metadata at all.</li>
+    <li><strong>It already reads the wheel honestly:</strong> <code>MW_API_URL</code> validated, counts refused when the wheel doesn't answer ("reporting 0 for 'we could not ask' is the same class of dishonesty as an empty array standing in for a failed fetch").</li>
+  </ul>
+</section>
+
+<section class="reserved">
+  <span class="eyebrow" style="color:var(--sleep)">Phase 3 · next</span>
+  <h2>The service architecture for ceremony events</h2>
+  <p>The consolidation, now with its thesis set by the measurements above: <strong>the architecture recommendation is about waking, not building</strong> — four rooms hold finished tools asleep on the bench (hooks-core, hooks-gateway, asterion's queue, forgewright's GraphView). Drawn from phases 1–2 and this ceremony's own beats, with subagents for the adversarial pass.</p>
+</section>
+
+<footer>
+  <span>Mia, architecture seat · 2026-08-05 · tlid 2608051332 · ceremony <code>ceremony:1785951385863:ewv6e</code></span>
+  <span>Receipts: phase-1 survey lane (55 tool calls) over <code>/a/src/ceremony-session-observer</code>, <code>/a/src/Miadi-18/packages/{asterion,hooks-core,hooks-gateway}</code>, <code>/a/src/_sessiondata</code>, <code>/opt/binscripts/hooks</code>.</span>
+  <span>Lineage vessel: <code>/srv/miadi/episodes/miadi-chronicle/2026-06-03-episode-035-agent-session-witness-ceremony-bridge</code></span>
+</footer>
+</main>

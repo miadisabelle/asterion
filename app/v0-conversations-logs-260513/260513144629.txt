@@ -1,0 +1,194 @@
+Overview
+Build an interactive documentation system with:
+
+Dual audience modes: Normal (technical) + Kids (12-year-old advanced learners)
+Three content origins: Academic, Technical/Engineering, Narrative
+Interactive diagrams: Using mermaidcn (shadcn-compatible Mermaid renderer)
+Admin editing: Content stored in database, editable in-app
+Navigation: Table of contents, cross-linking, search
+
+
+Database Schema
+asterion.doc_pages
+CREATE TABLE asterion.doc_pages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  slug TEXT NOT NULL UNIQUE,
+  title TEXT NOT NULL,
+  title_kids TEXT,
+  origin TEXT NOT NULL, -- 'academic' | 'technical' | 'narrative'
+  parent_id UUID REFERENCES asterion.doc_pages(id) ON DELETE SET NULL,
+  sort_order INTEGER DEFAULT 0,
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+asterion.doc_sections
+CREATE TABLE asterion.doc_sections (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  page_id UUID NOT NULL REFERENCES asterion.doc_pages(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  title_kids TEXT,
+  content TEXT NOT NULL,
+  content_kids TEXT,
+  section_type TEXT DEFAULT 'text', -- 'text' | 'diagram' | 'callout' | 'code' | 'interactive'
+  diagram_code TEXT, -- Mermaid diagram code if section_type='diagram'
+  sort_order INTEGER DEFAULT 0,
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+asterion.doc_links
+CREATE TABLE asterion.doc_links (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  from_section_id UUID NOT NULL REFERENCES asterion.doc_sections(id) ON DELETE CASCADE,
+  to_page_id UUID REFERENCES asterion.doc_pages(id) ON DELETE CASCADE,
+  to_tension_id UUID REFERENCES asterion.tensions(id) ON DELETE CASCADE,
+  to_entity_id UUID REFERENCES asterion.entities(id) ON DELETE CASCADE,
+  link_text TEXT NOT NULL,
+  metadata JSONB DEFAULT '{}'
+);
+
+Libraries
+Install
+pnpm add mermaid @xyflow/react
+npx shadcn@latest add https://mermaidcn.vercel.app/r/mermaid.json
+Why these choices:
+
+mermaidcn: shadcn-compatible, zoom/pan built-in, handles dynamic imports
+@xyflow/react (React Flow): For the interactive layer map / topology views
+Both MIT licensed, well-maintained
+
+
+File Structure
+app/
+  docs/
+    page.tsx                    # Docs landing / index
+    [slug]/
+      page.tsx                  # Individual doc page
+    edit/
+      [slug]/
+        page.tsx                # Admin edit page
+        
+components/
+  docs/
+    docs-sidebar.tsx            # Navigation tree
+    docs-content.tsx            # Renders sections based on type
+    docs-section.tsx            # Individual section renderer
+    docs-diagram.tsx            # Mermaid diagram with zoom/pan
+    docs-audience-toggle.tsx    # Normal/Kids mode switcher
+    docs-admin-editor.tsx       # Section editor for admins
+    docs-callout.tsx            # Callout boxes
+    docs-layer-map.tsx          # React Flow layer visualization
+    
+lib/
+  asterion/
+    docs.ts                     # CRUD operations for doc_pages, doc_sections
+    
+api/
+  docs/
+    route.ts                    # GET all pages, POST new page
+    [slug]/
+      route.ts                  # GET/PATCH/DELETE page
+      sections/
+        route.ts                # GET/POST sections
+        [sectionId]/
+          route.ts              # PATCH/DELETE section
+
+
+Key Components
+1. Audience Toggle (Top Header)
+
+Sticky header with toggle switch
+Uses React Context to propagate mode
+Label: "Technical" / "Explorer Mode" (for kids)
+Persisted in localStorage
+
+2. Docs Sidebar
+
+Tree navigation grouped by origin (Academic, Technical, Narrative)
+Collapsible sections
+Current page highlight
+Shows page titles based on audience mode
+
+3. Section Renderer
+Based on section_type:
+
+text: Rich text with markdown-like formatting
+diagram: Mermaid diagram with zoom/pan controls
+callout: Info/warning/tip boxes
+code: Syntax highlighted code blocks
+interactive: Embedded React Flow for topology maps
+
+4. Admin Editor
+
+Inline editing when admin mode active
+Two-pane editor: Normal content | Kids content
+Live preview
+Mermaid editor with preview
+Reorder sections via drag
+
+
+Audience Adaptation Strategy
+Normal Mode (Technical)
+
+Full technical terminology
+Detailed implementation notes
+Code examples
+Academic citations where relevant
+
+Kids Mode (Explorer Mode)
+
+Same concepts, accessible language
+Metaphors and analogies
+More visual emphasis
+Shorter sections
+Encouraging tone
+
+Example transformation:
+
+Normal: "Structural tension represents the gap between current reality and desired outcome, creating a natural resolution force."
+Kids: "Think of structural tension like a rubber band stretched between where you are now and where you want to be. The band naturally wants to snap back together - that's the energy that helps you make progress!"
+
+
+Seed Content
+Initial documentation pages:
+
+Welcome to Asterion (Narrative origin)
+What is Structural Tension? (Academic origin)
+The Seven Layers (Technical origin)
+Telescoping: Zoom In and Out (Narrative origin)
+MMOT: Course Correction (Academic origin)
+Projects as Lenses (Technical origin)
+
+Each with both audience variants and at least one diagram.
+
+API Design
+GET /api/docs
+Returns page tree with origins for navigation
+GET /api/docs/[slug]
+Returns page with all sections
+PATCH /api/docs/[slug]/sections/[id]
+Updates section content (normal or kids)
+POST /api/docs/[slug]/sections
+Adds new section to page
+
+UI Flow
+
+User lands on /docs → sees welcome page
+Toggle in header switches audience mode
+Sidebar shows all pages grouped by origin
+Click page → content renders with appropriate audience variant
+Diagrams are zoomable/pannable
+Admin users see edit buttons → /docs/edit/[slug]
+
+
+Implementation Order
+
+Create database tables
+Install mermaid + mermaidcn components
+Create lib/asterion/docs.ts with CRUD
+Create API routes
+Build docs components (sidebar, content, diagram, toggle)
+Build docs pages (/docs, /docs/[slug])
+Build admin editor
+Seed initial content
