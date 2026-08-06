@@ -1,0 +1,315 @@
+meta:
+  packet: asterion-substrate
+  repo: miadisabelle/asterion
+  generated: 2026-08-06
+  method: deep-research-foundations
+  verification_status: live-web-verified
+  note: >
+    Every entry marked verified:true was returned by live web search on
+    2026-08-06. Entries marked kind:practitioner are included under the
+    context-layer rule that a field's vocabulary is cited where it originated —
+    event sourcing and CQRS were named in practitioner writing before the
+    academic literature adopted them. Book entries cite publisher or ISBN
+    rather than a retailer listing.
+
+sources:
+
+  # ---- field 1: event-sourced architecture ----
+  - id: fowler-event-sourcing
+    field: event-sourced-architecture
+    kind: practitioner
+    title: "Event Sourcing"
+    author: Martin Fowler
+    date: 2005-12-12
+    url: https://martinfowler.com/eaaDev/EventSourcing.html
+    supports: >
+      The defining test of event sourcing — application state can be discarded
+      and rebuilt confidently from the log. Used to argue Asterion currently
+      logs rather than sources.
+    quote: >
+      "We can discard the application state completely and rebuild it by
+      re-running the events from the event log on an empty application."
+    verified: true
+    verification_method: fetched 2026-08-06
+
+  - id: fowler-cqrs
+    field: event-sourced-architecture
+    kind: practitioner
+    title: "CQRS"
+    author: Martin Fowler
+    url: https://martinfowler.com/bliki/CQRS.html
+    supports: >
+      Command Query Responsibility Segregation, attributed to Greg Young; the
+      read model differs from the write model, and CQRS composes with event
+      sourcing via Event Collaboration.
+    verified: true
+
+  - id: young-cqrs-docs
+    field: event-sourced-architecture
+    kind: practitioner
+    title: "CQRS Documents"
+    author: Greg Young
+    supports: >
+      No business logic between an event and its storage, to avoid versioning
+      tangles that make replay after a bug fix unsound.
+    url: https://cqrs.files.wordpress.com/2010/11/cqrs_documents.pdf
+    verified: false
+    caution: >
+      Claim confirmed via secondary sources in live search; the primary PDF URL
+      was not fetched. Treat the attribution as solid and the URL as unchecked.
+
+  - id: msft-event-sourcing
+    field: event-sourced-architecture
+    kind: standards-adjacent
+    title: "Event Sourcing pattern — Azure Architecture Center"
+    publisher: Microsoft
+    url: https://learn.microsoft.com/en-us/azure/architecture/patterns/event-sourcing
+    supports: Append-only store semantics and projection rebuild as a documented pattern.
+    verified: true
+
+  # ---- field 2: knowledge representation ----
+  - id: angles-gutierrez-2008
+    field: knowledge-representation
+    kind: peer-reviewed
+    title: "Survey of graph database models"
+    author: Renzo Angles; Carlos Gutiérrez
+    venue: ACM Computing Surveys 40(1)
+    year: 2008
+    doi: 10.1145/1322432.1322433
+    url: https://dl.acm.org/doi/10.1145/1322432.1322433
+    supports: >
+      The founding comparative treatment of graph data models; property graph
+      defined as a directed labeled graph whose vertices and edges carry
+      arbitrary property-value pairs.
+    verified: true
+
+  - id: hogan-kg-2021
+    field: knowledge-representation
+    kind: peer-reviewed
+    title: "Knowledge Graphs"
+    author: Aidan Hogan et al.
+    venue: ACM Computing Surveys 54(4)
+    year: 2021
+    doi: 10.1145/3447772
+    url: https://dl.acm.org/doi/10.1145/3447772
+    supports: >
+      Current synthesis of the field; nodes as entities and edges as relations,
+      conforming to either the RDF or property-graph model.
+    verified: true
+
+  # ---- field 3: structural dynamics ----
+  - id: fritz-polr
+    field: structural-dynamics
+    kind: primary-book
+    title: "The Path of Least Resistance: Learning to Become the Creative Force in Your Own Life"
+    author: Robert Fritz
+    publisher: Fawcett/Ballantine
+    isbn: "9780449903377"
+    supports: >
+      Structure determines behaviour; structural tension as the generative
+      relationship between desired result and current reality; advancing vs
+      oscillating patterns.
+    verified: true
+
+  - id: fritz-polr-managers
+    field: structural-dynamics
+    kind: primary-book
+    title: "The Path of Least Resistance for Managers"
+    author: Robert Fritz
+    publisher: Berrett-Koehler
+    url: https://www.robertfritz.com/
+    supports: >
+      Organizational application — underlying structures produce advancing or
+      oscillating outcomes; the way out of oscillation is structural redesign.
+    verified: true
+
+  - id: bodaken-fritz-mmot
+    field: structural-dynamics
+    kind: primary-book
+    title: "The Managerial Moment of Truth: The Essential Step in Helping People Improve Performance"
+    author: Bruce Bodaken; Robert Fritz
+    publisher: Free Press / Simon & Schuster
+    isbn: "9781451655353"
+    url: https://www.simonandschuster.com/books/The-Managerial-Moment-of-Truth/Bruce-Bodaken/9781451655353
+    supports: >
+      The MMOT protocol that `asterion.mmot_evaluations` encodes; reported at
+      Blue Shield of California as adding 25-40% to organizational capacity.
+    verified: true
+
+  - id: systems-thinker-polr
+    field: structural-dynamics
+    kind: practitioner
+    title: "New Insights on the Path of Least Resistance"
+    venue: The Systems Thinker
+    url: https://thesystemsthinker.com/wp-content/uploads/pdfs/220706pk.pdf
+    supports: Independent restatement of advancing vs oscillating patterns.
+    verified: true
+
+  - id: thwink-structural-tension
+    field: structural-dynamics
+    kind: practitioner
+    title: "Structural Tension"
+    publisher: Thwink.org
+    url: https://www.thwink.org/soft/info/process/structural/StructuralTension.html
+    supports: >
+      Structural tension as a dynamic force seeking equilibrium — the framing
+      that makes gap-language a category error.
+    verified: true
+
+  # ---- field 4: computational narratology ----
+  - id: alhussain-azmi-2021
+    field: computational-narratology
+    kind: peer-reviewed
+    title: "Automatic Story Generation: A Survey of Approaches"
+    venue: ACM Computing Surveys 54(5)
+    year: 2021
+    doi: 10.1145/3453156
+    url: https://dl.acm.org/doi/10.1145/3453156
+    supports: Standard survey of computational story generation and its relation to narratology.
+    verified: true
+
+  - id: kybartas-bidarra-2017
+    field: computational-narratology
+    kind: peer-reviewed
+    title: "From computational narrative analysis to generation"
+    venue: Proc. 12th International Conference on the Foundations of Digital Games
+    year: 2017
+    doi: 10.1145/3102071.3106362
+    url: https://dl.acm.org/doi/10.1145/3102071.3106362
+    supports: >
+      The analysis/generation taxonomy — the distinction that matters for a
+      system that records narrative rather than generating it.
+    verified: true
+
+  - id: news-narrative-2023
+    field: computational-narratology
+    kind: preprint
+    title: "A Survey on Event-based News Narrative Extraction"
+    year: 2023
+    url: https://arxiv.org/pdf/2302.08351
+    supports: >
+      Recovering narrative threads from event streams as a recognized subfield —
+      the exact shape of a system holding both an event log and a thread table.
+    verified: true
+
+  - id: narrative-llm-survey-2026
+    field: computational-narratology
+    kind: preprint
+    title: "Narrative Theory-Driven LLM Methods for Automatic Story Generation and Understanding: A Survey"
+    year: 2026
+    url: https://arxiv.org/html/2602.15851v1
+    supports: How narrative-theoretic constructs inform computational pipelines in the LLM era.
+    verified: true
+
+  # ---- field 5: provenance & governance ----
+  - id: w3c-prov-o
+    field: provenance-and-governance
+    kind: standard
+    title: "PROV-O: The PROV Ontology"
+    publisher: W3C
+    status: W3C Recommendation
+    date: 2013-04-30
+    url: https://www.w3.org/TR/prov-o/
+    supports: >
+      Entity / Activity / Agent and wasGeneratedBy, used, wasAssociatedWith,
+      wasDerivedFrom; provenance as information usable to assess quality,
+      reliability, trustworthiness. The model Asterion's actor_* columns gesture
+      at and do not populate.
+    verified: true
+
+  - id: fnigc-ocap
+    field: provenance-and-governance
+    kind: primary-authority
+    title: "The First Nations Principles of OCAP®"
+    publisher: First Nations Information Governance Centre (FNIGC)
+    url: https://fnigc.ca/ocap-training/
+    supports: >
+      Ownership, Control, Access, Possession; established 1998 by Canadian First
+      Nations leadership; FNIGC holds the trademark and defends the integrity of
+      the principles.
+    verified: true
+
+  - id: fnigc-ocap-brochure
+    field: provenance-and-governance
+    kind: primary-authority
+    title: "The First Nations Principles of OCAP® (brochure)"
+    publisher: FNIGC
+    url: https://fnigc.ca/wp-content/uploads/2022/10/OCAP_Brochure_20220927_web.pdf
+    supports: The four principles stated by the body that holds them.
+    verified: true
+
+  - id: wilson-2008
+    field: provenance-and-governance
+    kind: primary-book
+    title: "Research Is Ceremony: Indigenous Research Methods"
+    author: Shawn Wilson
+    publisher: Fernwood Publishing
+    year: 2008
+    isbn: "9781552662816"
+    url: https://fernwoodpublishing.ca/books/research-is-ceremony-shawn-wilson
+    supports: >
+      Relational accountability; knowledge held in relationship rather than
+      owned; methodology starting from the Indigenous paradigm and borrowing
+      Western tools rather than the reverse.
+    verified: true
+
+  - id: ocap-springer-2024
+    field: provenance-and-governance
+    kind: peer-reviewed
+    title: "Advancing First Nations Principles of OCAP"
+    publisher: Springer Nature
+    doi: 10.1007/978-3-031-56806-0_8
+    url: https://link.springer.com/chapter/10.1007/978-3-031-56806-0_8
+    supports: Peer-reviewed treatment of OCAP® in contemporary data governance practice.
+    verified: true
+
+  # ---- field 6: traceability engineering ----
+  - id: gotel-finkelstein-1994
+    field: traceability-engineering
+    kind: peer-reviewed
+    title: "An Analysis of the Requirements Traceability Problem"
+    author: Orlena Gotel; Anthony Finkelstein
+    venue: Proc. 1st International Conference on Requirements Engineering (ICRE '94), pp. 94-101
+    year: 1994
+    doi: 10.1109/ICRE.1994.292398
+    url: https://doi.org/10.1109/ICRE.1994.292398
+    supports: >
+      The standard definition — following the life of a requirement forwards and
+      backwards, from origins through specification to deployment and ongoing
+      refinement. Also the pre- vs post-requirements distinction.
+    verified: true
+
+  - id: pre-rs-traceability-slr-2023
+    field: traceability-engineering
+    kind: peer-reviewed
+    title: "A systematic literature review of pre-requirements specification traceability"
+    venue: Requirements Engineering
+    doi: 10.1007/s00766-023-00412-z
+    url: https://dl.acm.org/doi/abs/10.1007/s00766-023-00412-z
+    supports: >
+      Pre-requirements traceability as the persistent weak point — the link back
+      to origin and rationale is what decays.
+    verified: true
+
+  - id: ir-traceability-mapping-2025
+    field: traceability-engineering
+    kind: peer-reviewed
+    title: "A systematic mapping study of information retrieval-based requirements traceability methods"
+    venue: Information Processing & Management
+    url: https://www.sciencedirect.com/science/article/abs/pii/S0306457325002286
+    supports: >
+      Current state of automated trace-link recovery; supports the claim that
+      hand-maintained links decay and emitted links survive.
+    verified: true
+
+# ---- internal artifacts cited by the packet (not external sources) ----
+internal_references:
+  - path: docs/analysis/observer-asterion-hooks-findings.md
+    supports: >
+      The 2026-08-05 findings of record — ontology-core duplication minus
+      accountability fields, Phase == TensionPhase, Redis idempotency helpers
+      with zero callers, @xyflow/react unused, external_id as the intended seam.
+  - path: app/db/schema.sql
+    supports: The 18-table surface these fields decided; introspected 2026-08-06.
+  - path: docs/analysis/ceremony-event-architecture.html
+    supports: Phase 1 ceremony event architecture visualization.
