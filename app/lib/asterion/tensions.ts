@@ -423,13 +423,16 @@ export async function getTensionGraph(rootTensionId?: string): Promise<{
     edgesQuery = 'SELECT * FROM asterion.tension_edges'
   }
 
+  // These are built as query strings, not tagged templates, so they go through
+  // sql.query(). The @neondatabase/serverless v1 driver rejects a bare sql(text, params)
+  // call outright — every route reaching this function returned 500 until now.
   const [nodes, edges] = await Promise.all([
-    rootTensionId 
-      ? sql(tensionsQuery, [rootTensionId])
-      : sql(tensionsQuery),
     rootTensionId
-      ? sql(edgesQuery, [rootTensionId])
-      : sql(edgesQuery),
+      ? sql.query(tensionsQuery, [rootTensionId])
+      : sql.query(tensionsQuery),
+    rootTensionId
+      ? sql.query(edgesQuery, [rootTensionId])
+      : sql.query(edgesQuery),
   ])
 
   return {

@@ -1,6 +1,10 @@
 node_modules/
 .next/
+dist/
+*.tsbuildinfo
+
+# Secrets never travel. The template does.
 .env
 .env.*
+!.env.example
 .vercel/
-dist/

@@ -1,12 +1,15 @@
 {
-  "name": "my-project",
+  "name": "asterion",
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --port ${PORT:-3336}",
     "build": "next build",
-    "start": "next start",
-    "lint": "eslint ."
+    "start": "next start --port ${PORT:-3336}",
+    "lint": "eslint .",
+    "db:provision": "node scripts/db-provision.mjs",
+    "db:schema": "node scripts/db-provision.mjs --schema",
+    "db:verify": "node scripts/db-provision.mjs --verify"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
