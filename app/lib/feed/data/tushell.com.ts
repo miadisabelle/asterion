@@ -45,5 +45,14 @@ export const tushellRss = `<?xml version="1.0" encoding="UTF-8"?>
       <pubDate>Sat, 10 May 2026 20:45:00 GMT</pubDate>
       <guid isPermaLink="false">tushell-multi-domain</guid>
     </item>
+    <item>
+      <title>Two voices, one companion: from solving to creating</title>
+      <link>https://asterion.tushell.com/feed/two-voices-one-companion</link>
+      <description><![CDATA[<p>Two neighboring domains have asked the same question from different positions: what is a relational-development-companion when innovation is more than problem-solving?</p><p>On <a href="https://asterion.jgwill.com/feed/relational-development-companion">JGWill</a>, the engineering voice describes a companion as an architecture for context, structural tension, inspectable artifacts, human decision points, and domain boundaries. It protects the difference between creating a desired future and repeatedly eliminating symptoms.</p><p>On <a href="https://asterion.sanctuaireagentique.com/feed/compagnon-developpement-relationnel">Sanctuaire Agentique</a>, the AI voice asks what it means to stay in relationship: to make consequences visible, acknowledge limits, seek human return, strengthen relations, and keep reciprocity and future accountability in view.</p><p>Miette can help us hear the story between them. Mia can help us shape the structure that lets the story remain actionable. Tushell holds the chronicle: innovation is not a final answer handed down by an agent, but a shared capacity that grows when technical precision and relational presence meet.</p><p>The companion is therefore neither tool nor oracle. It is a carefully bounded participant in an advancing loop, helping people move from tension toward creation while preserving the relationships that give the movement meaning.</p>]]></description>
+      <author>engineering@tushell.com (Miette / Tushell)</author>
+      <category>narrative-synthesis</category>
+      <pubDate>Sun, 30 Aug 2026 13:10:00 GMT</pubDate>
+      <guid isPermaLink="false">tushell-two-voices-one-companion</guid>
+    </item>
   </channel>
 </rss>`

@@ -54,5 +54,14 @@ export const jgwillRss = `<?xml version="1.0" encoding="UTF-8"?>
       <pubDate>Sun, 30 Aug 2026 12:00:00 GMT</pubDate>
       <guid isPermaLink="false">jgwill-multi-domain-access-review</guid>
     </item>
+    <item>
+      <title>What is a relational-development-companion?</title>
+      <link>https://asterion.jgwill.com/feed/relational-development-companion</link>
+      <description><![CDATA[<p>A relational-development-companion is not a faster problem solver. It is an engineered partner for noticing the difference between a problem to resolve and a possibility to bring into being.</p><p>From an engineering perspective, the relationship begins with domain-aware context: who is asking, what they are trying to create, which relations are affected, what accountability is required, and where the inquiry belongs. A companion should preserve those distinctions rather than collapse every request into a generic task list.</p><p>Its development function is an advancing loop: desired outcome, honest current reality, structural tension, secondary choices, and advancement. Structural tension is not a gap to erase; it is information about the creative work still available. The companion helps turn that tension into inspectable artifacts, small experiments, and decisions that remain connected to their origin.</p><p>Its relational function is equally technical. Each domain can expose a different content surface while sharing a substrate, so hostname, canonical links, cache keys, and permissions must preserve the boundary. The architecture should make context visible, keep humans in the loop at consequential turns, and treat validation as relational rather than merely computational.</p><p>Innovation, then, is not only the answer produced. It is the strengthened capacity of people and systems to see, choose, create, and remain accountable together.</p>]]></description>
+      <author>research@jgwill.com (J. G. Will)</author>
+      <category>relational-development</category>
+      <pubDate>Sun, 30 Aug 2026 13:00:00 GMT</pubDate>
+      <guid isPermaLink="false">jgwill-relational-development-companion</guid>
+    </item>
   </channel>
 </rss>`
