@@ -48,7 +48,7 @@ export const jgwillRss = `<?xml version="1.0" encoding="UTF-8"?>
     <item>
       <title>Structural tension as a generative primitive</title>
       <link>https://asterion.jgwill.com/feed/structural-tension</link>
-      <description><![CDATA[Revisiting Fritz: the gap between current reality and desired outcome as the engine of advancing patterns.]]></description>
+      <description><![CDATA[Revisiting Fritz: the tension formed by holding desired outcome against current reality, as the engine of advancing patterns.]]></description>
       <author>research@jgwill.com (J. G. Will)</author>
       <category>methodology</category>
       <pubDate>Mon, 12 May 2026 11:20:00 GMT</pubDate>

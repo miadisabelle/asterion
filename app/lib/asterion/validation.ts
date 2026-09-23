@@ -115,7 +115,7 @@ export function validateTension(
     }
   }
 
-  // Check for disconnected current reality (no clear gap)
+  // Check for current reality restating the outcome (no structural tension can form)
   if (input.desired_outcome && input.current_reality) {
     const outcomeWords = new Set(input.desired_outcome.toLowerCase().split(/\s+/))
     const realityWords = new Set(input.current_reality.toLowerCase().split(/\s+/))
@@ -128,7 +128,7 @@ export function validateTension(
       warnings.push({
         field: 'current_reality',
         code: 'DISCONNECTED_REALITY',
-        message: 'Current reality and desired outcome appear very similar. Ensure there is a clear gap between them.',
+        message: 'Current reality and desired outcome read almost the same, so no structural tension can form. Describe what is true now, separately from the outcome.',
       })
     }
   }

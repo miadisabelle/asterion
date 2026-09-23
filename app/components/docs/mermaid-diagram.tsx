@@ -139,7 +139,7 @@ flowchart LR
   end
   
   subgraph Tension["Structural Tension"]
-    T[Gap]
+    T[Disequilibrium seeking resolution]
   end
   
   subgraph Desired["Desired Outcome"]

@@ -184,7 +184,7 @@ export default function TensionDetailPage({ params }: { params: Promise<{ id: st
             <CardHeader className="pb-3">
               <CardTitle className="text-base">Structural Tension</CardTitle>
               <CardDescription>
-                The gap between current reality and desired outcome
+                Desired outcome held against current reality: a force that seeks resolution
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -213,7 +213,7 @@ export default function TensionDetailPage({ params }: { params: Promise<{ id: st
                 <div>
                   <CardTitle className="text-base">Action Steps</CardTitle>
                   <CardDescription>
-                    Decomposition into executable actions
+                    Strategic steps that resolve the tension toward the outcome
                   </CardDescription>
                 </div>
                 <Dialog open={isAddStepOpen} onOpenChange={setIsAddStepOpen}>
@@ -229,7 +229,7 @@ export default function TensionDetailPage({ params }: { params: Promise<{ id: st
                       <DialogHeader>
                         <DialogTitle>Add Action Step</DialogTitle>
                         <DialogDescription>
-                          Break down the tension into a concrete action.
+                          Name a strategic step that advances current reality toward the desired outcome.
                         </DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4 py-4">
@@ -238,7 +238,7 @@ export default function TensionDetailPage({ params }: { params: Promise<{ id: st
                           <Input
                             id="step-title"
                             name="title"
-                            placeholder="What needs to be done?"
+                            placeholder="What step advances this toward the outcome?"
                             required
                             className="text-base"
                           />

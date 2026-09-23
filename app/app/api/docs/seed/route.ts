@@ -17,7 +17,7 @@ const SEED_PAGES = [
         title_explorer: 'The Big Picture',
         content: `Asterion is a recursive execution operating substrate designed for managing complex software development across distributed teams and repositories.
 
-Unlike traditional project management tools that treat issues as flat task lists, Asterion understands software development as a living topology of structural tensions—gaps between current reality and desired outcomes that drive all meaningful progress.
+Unlike traditional project management tools that treat issues as flat task lists, Asterion understands software development as a living topology of structural tensions: desired outcomes held against current reality, each a force that seeks resolution and moves the work forward.
 
 ### Core Philosophy
 
@@ -25,7 +25,7 @@ Asterion is built on Robert Fritz's structural tension methodology: the understa
 
 ### Key Capabilities
 
-- Structural Tension Charts: Model gaps between current reality and desired outcomes
+- Structural Tension Charts: Hold each desired outcome against its current reality, with the action steps that advance toward it
 - Telescoping: Recursive decomposition that preserves lineage
 - Cross-Repository Orchestration: Projects as lenses across multiple repos
 - Persistent Memory: Knowledge graph that survives context switches
@@ -44,9 +44,9 @@ Asterion is like a magical notebook that does all of this for building software!
 Instead of just listing tasks like "build the tower," Asterion helps you think about:
 - Where you are now (current reality)
 - Where you want to be (desired outcome)
-- The exciting gap between them (that's called "tension"!)
+- The pull you feel when you hold both at once (that's called "tension"!)
 
-This gap is what makes building fun and keeps everyone moving forward.`,
+This pull is what makes building fun and keeps everyone moving forward.`,
         section_type: 'text',
         sort_order: 0
       },
@@ -99,12 +99,12 @@ This gap is what makes building fun and keeps everyone moving forward.`,
       {
         title: 'Why Framing Matters',
         title_explorer: 'Why This is Different',
-        content: `The way you frame a problem determines the solutions available to you. Asterion enforces Fritz methodology not as bureaucracy, but because decades of research show that structural tension framing produces better outcomes than problem-solving framing.
+        content: `The orientation you start from determines what you can create. Asterion enforces Fritz methodology not as bureaucracy, but because structural tension produces an advancing pattern, while problem-solving tends to oscillate: action lowers the intensity of the problem, less action follows, and the problem returns.
 
 Problem-solving focuses on what's wrong and how to fix it. This creates reactive patterns and often just shifts problems around.
 
 Structural tension focuses on what you want to create and honestly assesses where you are. This creates generative patterns that build toward vision.`,
-        content_explorer: `Here's a secret: how you think about a problem changes what solutions you can find!
+        content_explorer: `Here's a secret: where you start from changes what you can build!
 
 If you think "this is broken, I need to fix it," you'll only think about fixing.
 
@@ -128,14 +128,16 @@ Asterion helps you think this second way, which is much more powerful.`,
     sections: [
       {
         title: 'The Tension Chart',
-        title_explorer: 'The Magic Gap',
+        title_explorer: 'The Magic Stretch',
         content: `A structural tension chart has three essential components:
 
 1. **Desired Outcome**: A clear, specific vision of what you want to create. Not "make it better" but "users can complete checkout in under 30 seconds."
 
 2. **Current Reality**: An honest assessment of where things stand right now. Not what you hope or fear, but what actually is.
 
-3. **Structural Tension**: The gap between desired outcome and current reality. This gap creates natural energy that drives resolution.
+3. **Action Steps**: Strategic secondary choices that support the desired outcome. Each one can telescope into its own chart.
+
+**Structural tension** is not a fourth component and not a gap to fill. It is the disequilibrium formed when the desired outcome and current reality are held at the same time, a loaded force that seeks resolution. Action steps resolve it by advancing current reality toward the outcome.
 
 ### Why It Works
 
@@ -165,7 +167,7 @@ That's the magic of structural tension.`,
   end
   
   subgraph Tension["Structural Tension"]
-    T[Gap]
+    T[Disequilibrium seeking resolution]
   end
   
   subgraph Desired["Desired Outcome"]

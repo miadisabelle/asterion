@@ -104,7 +104,7 @@ export default function TensionsPage() {
           <DialogHeader>
             <DialogTitle>Create Structural Tension</DialogTitle>
             <DialogDescription>
-              Define the gap between current reality and desired outcome.
+              Name what you want to create, then the current reality it is held against.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
