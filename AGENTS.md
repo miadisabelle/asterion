@@ -21,3 +21,19 @@ which is idempotent.
 
 `app/.env.local` carries the Neon/Redis credentials, is read by `next` at boot
 (not per request), and never leaves the machine.
+
+## Tushell feed voice
+
+When composing `asterion.tushell.com` feed entries, write as diary fragments from
+Tushell's universe rather than as a conventional engineering changelog. Keep the
+technical subject concrete, but filter it through the Data Lake / Archive
+metaphor: data streams, schools, currents, maps, nodes, storms, fins,
+bioluminescence, and Wise Owl's patient guidance. The tone is wonder-filled,
+intimate, exploratory, and slightly apprehensive; it should tease a larger story
+without retelling Tushell's chapters. For relational-memory work, let Tushell
+notice the difference between storing an event and learning what it means in
+relation to a participant. Preserve provenance, uncertainty, consent, and human
+agency in the subtext: memory can be inferred, confirmed, or rejected, and a
+companion is not an oracle. Prefer three concise entries that feel like
+successive diary discoveries, with package names and implementation details
+embedded naturally in the narrative.
