@@ -17,7 +17,7 @@ const SEED_PAGES = [
         title_explorer: 'The Big Picture',
         content: `Asterion is a recursive execution operating substrate designed for managing complex software development across distributed teams and repositories.
 
-Unlike traditional project management tools that treat issues as flat task lists, Asterion understands software development as a living topology of structural tensions: desired outcomes held against current reality, each a force that seeks resolution and moves the work forward.
+Unlike traditional project management tools that treat issues as flat task lists, Asterion understands software development as a living topology of structural tensions: honest current realities paired with clear desired outcomes, each an unresolved dynamic that seeks resolution through advancement.
 
 ### Core Philosophy
 
@@ -25,7 +25,7 @@ Asterion is built on Robert Fritz's structural tension methodology: the understa
 
 ### Key Capabilities
 
-- Structural Tension Charts: Hold each desired outcome against its current reality, with the action steps that advance toward it
+- Structural Tension Charts: A desired outcome, its current reality, and the action steps that advance toward it
 - Telescoping: Recursive decomposition that preserves lineage
 - Cross-Repository Orchestration: Projects as lenses across multiple repos
 - Persistent Memory: Knowledge graph that survives context switches
