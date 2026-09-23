@@ -60,6 +60,24 @@ that already exist are skipped rather than fatal — replaying against a
 provisioned database is a no-op. Point `DATABASE_URL` at a new Neon instance and
 `pnpm db:provision` stands the whole surface up from zero.
 
+## Where the data comes from
+
+Asterion's own surfaces write rows, and one other path fills it: a projection of
+a `coaia-narrative` JSONL memory, the format `avadisabelle/coaia-narrative`
+defines and the COAIA MCP writes.
+
+```bash
+node scripts/import-coaia-jsonl.mjs <file.jsonl>            # report what it would write
+node scripts/import-coaia-jsonl.mjs <file.jsonl> --apply    # write it
+```
+
+Charts become tensions (with `github_*` filled from `metadata.github`), action
+steps become action steps, beats become beats, and a chart family carrying beats
+becomes a thread. Every entity and relation also lands in the graph. Each
+projected row carries `external_source` and `external_id`, so re-running updates
+the same rows rather than minting new ones. The JSONL stays the record; nothing
+is written back to it.
+
 ## Surfaces
 
 | route | what it carries |

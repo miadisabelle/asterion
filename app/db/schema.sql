@@ -287,3 +287,20 @@ CREATE INDEX IF NOT EXISTS idx_doc_pages_origin ON asterion.doc_pages USING btre
 CREATE INDEX IF NOT EXISTS idx_events_created ON asterion.events USING btree (created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_tensions_phase ON asterion.tensions USING btree (phase);
 CREATE INDEX IF NOT EXISTS idx_tensions_status ON asterion.tensions USING btree (status);
+
+-- ============ external identity ============
+-- Rows Asterion holds on behalf of another system carry where they came from.
+-- Re-projecting the same source then updates the same row instead of minting a
+-- second one. Written by scripts/import-coaia-jsonl.mjs; empty for rows born here.
+ALTER TABLE asterion.tensions ADD COLUMN IF NOT EXISTS external_id text;
+ALTER TABLE asterion.tensions ADD COLUMN IF NOT EXISTS external_source text;
+ALTER TABLE asterion.action_steps ADD COLUMN IF NOT EXISTS external_id text;
+ALTER TABLE asterion.action_steps ADD COLUMN IF NOT EXISTS external_source text;
+ALTER TABLE asterion.narrative_beats ADD COLUMN IF NOT EXISTS external_id text;
+ALTER TABLE asterion.narrative_beats ADD COLUMN IF NOT EXISTS external_source text;
+ALTER TABLE asterion.narrative_threads ADD COLUMN IF NOT EXISTS external_id text;
+ALTER TABLE asterion.narrative_threads ADD COLUMN IF NOT EXISTS external_source text;
+CREATE UNIQUE INDEX IF NOT EXISTS tensions_external_key ON asterion.tensions USING btree (external_id, external_source);
+CREATE UNIQUE INDEX IF NOT EXISTS action_steps_external_key ON asterion.action_steps USING btree (external_id, external_source);
+CREATE UNIQUE INDEX IF NOT EXISTS narrative_beats_external_key ON asterion.narrative_beats USING btree (external_id, external_source);
+CREATE UNIQUE INDEX IF NOT EXISTS narrative_threads_external_key ON asterion.narrative_threads USING btree (external_id, external_source);
