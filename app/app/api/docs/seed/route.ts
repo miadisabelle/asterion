@@ -17,7 +17,7 @@ const SEED_PAGES = [
         title_explorer: 'The Big Picture',
         content: `Asterion is a recursive execution operating substrate designed for managing complex software development across distributed teams and repositories.
 
-Unlike traditional project management tools that treat issues as flat task lists, Asterion understands software development as a living topology of structural tensions: honest current realities paired with clear desired outcomes, each an unresolved dynamic that seeks resolution through advancement.
+Unlike traditional project management tools that treat issues as flat task lists, Asterion understands software development as a living topology of structural tensions: current realities paired with clear desired outcomes, each an unresolved dynamic that seeks resolution through advancement.
 
 ### Core Philosophy
 
@@ -103,7 +103,7 @@ This pull is what makes building fun and keeps everyone moving forward.`,
 
 Problem-solving focuses on what's wrong and how to fix it. This creates reactive patterns and often just shifts problems around.
 
-Structural tension focuses on what you want to create and honestly assesses where you are. This creates generative patterns that build toward vision.`,
+Structural tension focuses on what you want to create and on where you are now. This creates generative patterns that build toward vision.`,
         content_explorer: `Here's a secret: where you start from changes what you can build!
 
 If you think "this is broken, I need to fix it," you'll only think about fixing.
@@ -133,7 +133,7 @@ Asterion helps you think this second way, which is much more powerful.`,
 
 1. **Desired Outcome**: A clear, specific vision of what you want to create. Not "make it better" but "users can complete checkout in under 30 seconds."
 
-2. **Current Reality**: An honest assessment of where things stand right now. Not what you hope or fear, but what actually is.
+2. **Current Reality**: Where things stand right now. Not what you hope or fear, but what actually is.
 
 3. **Action Steps**: Strategic secondary choices that support the desired outcome. Each one can telescope into its own chart.
 

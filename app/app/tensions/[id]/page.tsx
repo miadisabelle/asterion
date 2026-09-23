@@ -184,7 +184,7 @@ export default function TensionDetailPage({ params }: { params: Promise<{ id: st
             <CardHeader className="pb-3">
               <CardTitle className="text-base">Structural Tension</CardTitle>
               <CardDescription>
-                Honest current reality paired with a clear desired outcome: an unresolved dynamic that seeks resolution through advancement
+                Current reality paired with a clear desired outcome: an unresolved dynamic that seeks resolution through advancement
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
