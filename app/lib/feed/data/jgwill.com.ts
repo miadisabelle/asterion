@@ -5,10 +5,37 @@ export const jgwillRss = `<?xml version="1.0" encoding="UTF-8"?>
     <title>Asterion · JGWill Research</title>
     <link>https://asterion.jgwill.com/feed</link>
     <atom:link href="https://asterion.jgwill.com/feed" rel="self" type="application/rss+xml" />
-    <description>Academic notes on structural tension, prompt decomposition, and recursive execution theory.</description>
+    <description>Research notes and package releases on relational software, event-sourced memory, and the Medicine Wheel.</description>
     <language>en-us</language>
     <category>research</category>
-    <lastBuildDate>Tue, 13 May 2026 16:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 23 Sep 2026 16:00:00 GMT</lastBuildDate>
+    <item>
+      <title>@medicine-wheel/honcho 0.15.2: the wheel&apos;s projection into memory that reasons</title>
+      <link>https://asterion.jgwill.com/feed/honcho-0-15-2</link>
+      <description><![CDATA[<p><code>@medicine-wheel/honcho</code> connects the Medicine Wheel to a self-hosted Honcho. The wheel keeps what was recorded and how it relates; Honcho keeps what that history has come to mean about each participant, revising it as new records arrive.</p><p>It works in three deliberate moves: project a beat, ceremony log, or diary entry into one Honcho message; recall a participant&apos;s representation; then project a conclusion back as a knowledge node with source record ids, derivation, and an <code>inferred</code>, <code>confirmed</code>, or <code>rejected</code> status.</p><p>The writer never waits on memory. Wheel ids map deterministically to Honcho ids, ceremonies remain one session, and the package uses only <code>fetch</code>—no vendor SDK.</p>]]></description>
+      <author>research@jgwill.com (J. G. Will)</author>
+      <category>packages</category>
+      <pubDate>Tue, 23 Sep 2026 16:00:00 GMT</pubDate>
+      <guid isPermaLink="false">jgwill-honcho-0-15-2</guid>
+    </item>
+    <item>
+      <title>Honcho and the accountability of memory</title>
+      <link>https://asterion.jgwill.com/feed/honcho-accountability</link>
+      <description><![CDATA[<p>Event sourcing gives the wheel an append-only record and rebuildable projections. Reflection gives an agent a memory stream that can form higher-level conclusions. Relational accountability and Indigenous data sovereignty ask the harder questions: where does memory live, who may read it, and who decides what enters it?</p><p>Honcho is a projection, not a replacement for the record. Every conclusion traces back to the wheel, while recall and project-back remain deliberate calls rather than hidden automation.</p>]]></description>
+      <author>research@jgwill.com (J. G. Will)</author>
+      <category>methodology</category>
+      <pubDate>Tue, 23 Sep 2026 14:00:00 GMT</pubDate>
+      <guid isPermaLink="false">jgwill-honcho-accountability</guid>
+    </item>
+    <item>
+      <title>A Honcho projection in a Miadi talking circle</title>
+      <link>https://asterion.jgwill.com/feed/honcho-talking-circle</link>
+      <description><![CDATA[<p>When a facilitator opens a circle, the ceremony log and members become a Honcho session. Each member&apos;s turn and diary entry arrives in that session in their voice. Miadi decides who may open, speak, or write; the wheel projects what was stored without filtering it.</p><p>The projection does not yet cover circle membership, witnesses added after a turn, or records written before 20 September 2026. A closing lands in its own session.</p>]]></description>
+      <author>research@jgwill.com (J. G. Will)</author>
+      <category>field-notes</category>
+      <pubDate>Tue, 23 Sep 2026 12:00:00 GMT</pubDate>
+      <guid isPermaLink="false">jgwill-honcho-talking-circle</guid>
+    </item>
     <item>
       <title>Prompt Decomposition Engine: a formal model</title>
       <link>https://asterion.jgwill.com/feed/pde-formal-model</link>

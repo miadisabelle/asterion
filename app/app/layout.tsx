@@ -8,8 +8,8 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Asterion',
-  description: 'Recursive Execution Operating Substrate',
+  title: 'Asterion · relational software research',
+  description: 'Research notes and package releases on relational software, event-sourced memory, and the Medicine Wheel.',
   generator: 'v0.app',
   icons: {
     icon: [

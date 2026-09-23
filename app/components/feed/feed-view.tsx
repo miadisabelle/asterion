@@ -13,9 +13,13 @@ function formatDate(pubDate: string): string {
   })
 }
 
+function previewText(description: string): string {
+  return description.replace(/<[^>]*>/g, '').replace(/&apos;/g, "'").trim()
+}
+
 export function FeedView({ channel }: { channel: FeedChannel }) {
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
       <Card>
         <CardHeader>
           <div className="flex items-start justify-between gap-4">
@@ -61,7 +65,7 @@ export function FeedView({ channel }: { channel: FeedChannel }) {
                 {item.title}
               </h3>
               <p className="mt-1 text-sm leading-relaxed text-muted-foreground text-pretty">
-                {item.description}
+                {previewText(item.description)}
               </p>
 
               <div className="mt-4 flex items-center justify-between gap-3">
