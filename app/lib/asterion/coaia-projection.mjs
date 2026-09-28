@@ -29,10 +29,14 @@
 //   every chart              → project_tensions
 
 import { createHash } from 'node:crypto'
+// The package that writes these files owns how they are read. Classification —
+// which line is an entity, a relation, or a legacy beat — comes from its contract,
+// so a dialect it learns is one Asterion reads without a change here.
+import { parseStore } from 'coaia-narrative/contract'
 
 export const SYSTEM = 'coaia-narrative'
 /** Raise when the mapping changes, so every project re-projects on its next pass. */
-export const MAPPER_VERSION = 2
+export const MAPPER_VERSION = 3
 export const KEY_PATTERN = /^[a-z0-9][a-z0-9._-]{0,63}$/
 export const sourceFor = (key) => `${SYSTEM}:${key}`
 
@@ -48,8 +52,9 @@ export const hashText = (text) => sha(text)
 // ---------- reading ----------
 
 /**
- * Parse JSONL text. A line that does not parse is reported, never dropped
- * silently, and never guessed at.
+ * Parse JSONL text into plain records, reporting lines that are not JSON objects.
+ * Used to count and merge a project's files; the plan itself reads through the
+ * package contract (planProjection).
  * @param {string} text
  * @returns {{ records: object[], errors: { line: number, message: string }[] }}
  */
@@ -123,20 +128,20 @@ function githubOf(meta = {}) {
 // ---------- the plan ----------
 
 /**
- * Turn records into what Asterion will hold. Pure: no database, no clock.
- * @param {object[]} records
+ * Turn a memory file into what Asterion will hold. Pure: no database, no clock.
+ * @param {string | object[]} input  the file's text, or its records
  * @param {{ file?: string | null }} [opts]
  */
 export function planProjection(input, { file = null } = {}) {
-  const records = input.map(scrub)
-  // Older writers recorded a beat as `type: "narrative_beat"` with no entityType;
-  // both shapes are the same entity and both must project.
-  const entities = records
-    .filter((r) => r && r.type !== 'relation' && typeof (r.entityType ?? r.type) === 'string' && typeof r.name === 'string' && r.name)
-    .map((r) => ({ ...r, entityType: r.entityType ?? r.type, metadata: r.metadata && typeof r.metadata === 'object' ? r.metadata : {} }))
-  const relations = records.filter(
-    (r) => r && r.type === 'relation' && typeof r.from === 'string' && typeof r.to === 'string' && typeof r.relationType === 'string'
-  )
+  const raw = typeof input === 'string' ? input : input.map((r) => JSON.stringify(r)).join('\n')
+  const store = parseStore(raw)
+  const entities = [...store.entities.values()]
+    .map(scrub)
+    .filter((e) => typeof e.entityType === 'string' && typeof e.name === 'string' && e.name)
+    .map((e) => ({ ...e, metadata: e.metadata && typeof e.metadata === 'object' ? e.metadata : {} }))
+  const relations = store.relations
+    .map(scrub)
+    .filter((r) => typeof r.from === 'string' && typeof r.to === 'string' && typeof r.relationType === 'string')
   const byName = new Map(entities.map((e) => [e.name, e]))
   const of = (type) => entities.filter((e) => e.entityType === type)
   const chartIdOf = (e) => (typeof e.metadata.chartId === 'string' && e.metadata.chartId) || e.name.replace(/_chart$/, '')
@@ -229,6 +234,8 @@ export function planProjection(input, { file = null } = {}) {
 
   return {
     file,
+    // Lines the package contract does not read as any record.
+    skipped: store.skipped,
     charts,
     threads,
     entities,
