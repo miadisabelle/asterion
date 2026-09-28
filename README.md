@@ -62,21 +62,37 @@ provisioned database is a no-op. Point `DATABASE_URL` at a new Neon instance and
 
 ## Where the data comes from
 
-Asterion's own surfaces write rows, and one other path fills it: a projection of
-a `coaia-narrative` JSONL memory, the format `avadisabelle/coaia-narrative`
-defines and the COAIA MCP writes.
+Asterion's own surfaces write rows, and one other source fills it: coaia-narrative
+JSONL memories, the chart format `avadisabelle/coaia-narrative` defines and its MCP
+server writes. The JSONL stays the record; Asterion holds its projection, grouped
+by **project**, and nothing is written back.
+
+One mapper, `app/lib/asterion/coaia-projection.mjs`, and three ways in:
+
+| way in | when | how |
+|---|---|---|
+| the registry sync | a registered project's files changed | `pnpm coaia:sync`, or the timer in `scripts/ops/` |
+| the door | a writer posts what it just wrote | `POST /api/ingest/coaia-narrative` with `Authorization: Bearer $ASTERION_INGEST_TOKEN` |
+| by hand | a one-off file | `node scripts/import-coaia-jsonl.mjs <file> --project <key> [--apply]` |
 
 ```bash
-node scripts/import-coaia-jsonl.mjs <file.jsonl>            # report what it would write
-node scripts/import-coaia-jsonl.mjs <file.jsonl> --apply    # write it
+# register a project: a file in a git repository, read from origin/main
+node scripts/coaia-sync.mjs register coaia-agent --name "COAIA Agent" \
+  --git /workspace/repos/jgwill/coaia-agent --path .coaia/narrative/coaia-agent-memory.jsonl
+node scripts/coaia-sync.mjs list
+node scripts/coaia-sync.mjs sync            # --force, --dry-run, --prune
 ```
 
-Charts become tensions (with `github_*` filled from `metadata.github`), action
-steps become action steps, beats become beats, and a chart family carrying beats
-becomes a thread. Every entity and relation also lands in the graph. Each
-projected row carries `external_source` and `external_id`, so re-running updates
-the same rows rather than minting new ones. The JSONL stays the record; nothing
-is written back to it.
+A project is one `asterion.projects` row; its files live in `metadata.source.files`
+and each chart it carries joins it through `project_tensions`. Every projected row
+carries `external_source = coaia-narrative:<project>` and `external_id` = the
+record's own name, so a second pass updates rather than duplicates. A project that
+is not registered is never read and the door refuses it: what reaches the three
+public domains is decided at registration.
+
+The door is off unless `ASTERION_INGEST_TOKEN` is set, never prunes (it may be
+sent one file of several), and logs `tension.projected` only for charts whose
+content changed plus one `coaia.projected` per pass, with the writer as actor.
 
 ## Surfaces
 

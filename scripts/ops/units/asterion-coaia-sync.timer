@@ -1,0 +1,10 @@
+[Unit]
+Description=Asterion: keep the registered coaia-narrative projects current
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

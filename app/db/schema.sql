@@ -304,3 +304,9 @@ CREATE UNIQUE INDEX IF NOT EXISTS tensions_external_key ON asterion.tensions USI
 CREATE UNIQUE INDEX IF NOT EXISTS action_steps_external_key ON asterion.action_steps USING btree (external_id, external_source);
 CREATE UNIQUE INDEX IF NOT EXISTS narrative_beats_external_key ON asterion.narrative_beats USING btree (external_id, external_source);
 CREATE UNIQUE INDEX IF NOT EXISTS narrative_threads_external_key ON asterion.narrative_threads USING btree (external_id, external_source);
+-- A project projected from another system is found again by the same pair.
+-- For coaia-narrative: external_source = 'coaia-narrative', external_id = the
+-- project key; the rows it carries use external_source = 'coaia-narrative:<key>'.
+ALTER TABLE asterion.projects ADD COLUMN IF NOT EXISTS external_id text;
+ALTER TABLE asterion.projects ADD COLUMN IF NOT EXISTS external_source text;
+CREATE UNIQUE INDEX IF NOT EXISTS projects_external_key ON asterion.projects USING btree (external_id, external_source);

@@ -19,6 +19,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { Plus, FolderKanban, AlertCircle } from 'lucide-react'
+import { ProjectSourceLine } from '@/components/asterion/provenance'
 import { mutate } from 'swr'
 import { formatDistanceToNow } from 'date-fns'
 import Link from 'next/link'
@@ -158,9 +159,13 @@ export default function ProjectsPage() {
                       {project.description}
                     </p>
                   )}
-                  <p className="text-xs text-muted-foreground">
-                    Created {formatDistanceToNow(new Date(project.created_at), { addSuffix: true })}
-                  </p>
+                  {project.external_source ? (
+                    <ProjectSourceLine metadata={project.metadata} />
+                  ) : (
+                    <p className="text-xs text-muted-foreground">
+                      Created {formatDistanceToNow(new Date(project.created_at), { addSuffix: true })}
+                    </p>
+                  )}
                 </CardContent>
               </Card>
             </Link>

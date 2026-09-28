@@ -56,3 +56,26 @@ and the service is still running on the old values until `./scripts/ops/restart.
 
 🌸: Four small verbs, so the question "is it up, and is it *my* version that's
 up?" always has an answer you can read in one screen.
+
+## The coaia-narrative sync — proposed, not installed
+
+`app/scripts/coaia-sync.mjs sync` projects every registered coaia-narrative
+project into Asterion: a git file is read from its ref after a fetch, never
+through a working tree, and a project whose files have not changed is skipped.
+Two unit files make it run every five minutes. **They are in the repository and
+not installed on gaia**; installing them is a decision for the owner of this
+host.
+
+```bash
+cp scripts/ops/units/asterion-coaia-sync.{service,timer} ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user start asterion-coaia-sync.service      # one pass, now; read its output below
+journalctl --user -u asterion-coaia-sync.service -n 30
+systemctl --user enable --now asterion-coaia-sync.timer
+```
+
+Before enabling the timer, the one-shot pass must show every project as
+`unchanged` or as a projection, never `cannot read`: a git source whose remote
+is reached over ssh needs a key the user session can use without an agent.
+
+Without the timer, the same pass by hand is `cd app && node scripts/coaia-sync.mjs sync`.

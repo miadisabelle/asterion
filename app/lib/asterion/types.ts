@@ -28,6 +28,9 @@ export interface Tension {
   github_project_id: string | null
   github_project_item_id: string | null
   github_sync_state: Record<string, unknown>
+  // Set when the row is a projection of another system's record
+  external_id?: string | null
+  external_source?: string | null
   due_date: string | null
   progress: number
   status: TensionStatus
@@ -80,6 +83,9 @@ export interface Project {
   codename: string | null
   description: string | null
   metadata: Record<string, unknown>
+  // Set when the project is registered from another system
+  external_id?: string | null
+  external_source?: string | null
   created_at: string
   updated_at: string
   // Relations

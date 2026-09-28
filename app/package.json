@@ -9,7 +9,9 @@
     "lint": "eslint .",
     "db:provision": "node scripts/db-provision.mjs",
     "db:schema": "node scripts/db-provision.mjs --schema",
-    "db:verify": "node scripts/db-provision.mjs --verify"
+    "db:verify": "node scripts/db-provision.mjs --verify",
+    "coaia:list": "node scripts/coaia-sync.mjs list",
+    "coaia:sync": "node scripts/coaia-sync.mjs sync"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",

@@ -1,0 +1,10 @@
+[Unit]
+Description=Asterion: project the registered coaia-narrative files (scripts/coaia-sync.mjs sync)
+After=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/workspace/repos/miadisabelle/asterion/app
+Environment=NODE_ENV=production
+# Reads DATABASE_URL and the KV pair from app/.env.local itself (scripts/lib/connect.mjs).
+ExecStart=/usr/bin/env node scripts/coaia-sync.mjs sync

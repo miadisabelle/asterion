@@ -4,6 +4,7 @@ import { use, useState } from 'react'
 import { useTension, updateTension, createActionStep } from '@/lib/asterion/hooks'
 import { AppShell } from '@/components/asterion/app-shell'
 import { PhaseBadge, StatusBadge, LayerBadge, EdgeTypeBadge } from '@/components/asterion/badges'
+import { ProvenanceBadges } from '@/components/asterion/provenance'
 import { TensionCard } from '@/components/asterion/tension-card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -174,6 +175,12 @@ export default function TensionDetailPage({ params }: { params: Promise<{ id: st
             <span>Depth {tension.telescope_depth}</span>
           </div>
         )}
+        <ProvenanceBadges
+          source={tension.external_source}
+          githubOwner={tension.github_owner}
+          githubRepo={tension.github_repo}
+          githubIssue={tension.github_issue_number}
+        />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -424,6 +431,15 @@ export default function TensionDetailPage({ params }: { params: Promise<{ id: st
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Due</span>
                   <span className="text-right">{formatDistanceToNow(new Date(tension.due_date), { addSuffix: true })}</span>
+                </div>
+              )}
+              {tension.external_source && (
+                <div className="flex justify-between gap-3">
+                  <span className="text-muted-foreground">Source</span>
+                  <span className="text-right font-mono text-xs break-all">
+                    {tension.external_source}
+                    {tension.external_id ? ` · ${tension.external_id}` : ''}
+                  </span>
                 </div>
               )}
               {tension.parent_id && (

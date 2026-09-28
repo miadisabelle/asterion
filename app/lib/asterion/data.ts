@@ -1,6 +1,7 @@
 // Asterion Data Access Layer - Projects, Layers, Knowledge Graph
 import { sql } from './db'
 import { invalidateCache, getCache, setCache } from './redis'
+import { publicProject } from './coaia-projection.mjs'
 import type { 
   Project, 
   CreateProjectInput,
@@ -29,7 +30,8 @@ export async function getProjects(): Promise<Project[]> {
     SELECT * FROM asterion.projects ORDER BY created_at DESC
   `
   
-  const projects = result as Project[]
+  // A registered project's source files are local paths on one host; the public shape names them only.
+  const projects = (result as Project[]).map((p) => publicProject(p) as Project)
   await setCache(cacheKey, projects, 60)
   return projects
 }
@@ -38,7 +40,7 @@ export async function getProjectById(id: string): Promise<Project | null> {
   const result = await sql`
     SELECT * FROM asterion.projects WHERE id = ${id}
   `
-  return result[0] as Project || null
+  return result[0] ? (publicProject(result[0]) as Project) : null
 }
 
 export async function getProjectWithTensions(id: string): Promise<Project | null> {
