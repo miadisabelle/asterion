@@ -626,11 +626,12 @@ export function publicProject(p) {
         key: source.key,
         registeredAt: source.registeredAt ?? null,
         projectedAt: source.projectedAt ?? null,
+        // Idempotent: a project already in its public shape passes through unchanged.
         files: (source.files ?? []).map((f) => ({
           kind: f.kind,
-          name: typeof f.path === 'string' ? f.path.split('/').pop() : null,
+          name: f.name ?? (typeof f.path === 'string' ? f.path.split('/').pop() : null),
           syncedAt: f.syncedAt ?? null,
-          failing: Boolean(f.error),
+          failing: Boolean(f.error ?? f.failing),
         })),
       },
     },

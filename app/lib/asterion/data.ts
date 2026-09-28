@@ -23,8 +23,9 @@ import type {
 
 export async function getProjects(): Promise<Project[]> {
   const cacheKey = 'projects:all'
+  // The cache is shared with every deployment, so what it holds is made public on the way out too.
   const cached = await getCache<Project[]>(cacheKey)
-  if (cached) return cached
+  if (cached) return cached.map((p) => publicProject(p) as Project)
 
   const result = await sql`
     SELECT * FROM asterion.projects ORDER BY created_at DESC
