@@ -57,14 +57,14 @@ and the service is still running on the old values until `./scripts/ops/restart.
 🌸: Four small verbs, so the question "is it up, and is it *my* version that's
 up?" always has an answer you can read in one screen.
 
-## The coaia-narrative sync — proposed, not installed
+## The coaia-narrative sync — installed on gaia 2026-09-28
 
 `app/scripts/coaia-sync.mjs sync` projects every registered coaia-narrative
 project into Asterion: a git file is read from its ref after a fetch, never
 through a working tree, and a project whose files have not changed is skipped.
-Two unit files make it run every five minutes. **They are in the repository and
-not installed on gaia**; installing them is a decision for the owner of this
-host.
+Two unit files make it run every five minutes. They are installed on gaia and
+enabled; `systemctl --user disable --now asterion-coaia-sync.timer` stops it.
+To lay them down again (a rebuilt host, a moved checkout):
 
 ```bash
 cp scripts/ops/units/asterion-coaia-sync.{service,timer} ~/.config/systemd/user/

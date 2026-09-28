@@ -98,6 +98,7 @@ content changed plus one `coaia.projected` per pass, with the writer as actor.
 
 | route | what it carries |
 |---|---|
+| `/bridge` | where the charts come from, live: the writer→door and git→sync paths, registered projects, and each chart as it arrives |
 | `/tensions` | structural tension charts — desired outcome, current reality, phase, action steps, telescoping, MMOT |
 | `/events` | the append-only event log; `POST /api/events` is the write path |
 | `/graph` | entities, relations and observations as a traversable graph |
