@@ -117,8 +117,8 @@ importers:
         specifier: 1.1.1
         version: 1.1.1(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       coaia-narrative:
-        specifier: ^0.19.0
-        version: 0.19.0(coaia-memory@2.3.3)
+        specifier: ^0.19.1
+        version: 0.19.1(coaia-memory@2.3.3)
       date-fns:
         specifier: 4.1.0
         version: 4.1.0
@@ -1451,8 +1451,8 @@ packages:
     resolution: {integrity: sha512-0NWLlLQvIr8oRhDx2h1UuRd+sn57t5U5SEqdxA6P+TJkY9TpWrdZzT1aDdFQSzy7sjvEm02cArdDeiFcxSWWfQ==}
     hasBin: true
 
-  coaia-narrative@0.19.0:
-    resolution: {integrity: sha512-FGCwiVn1TfJ2Yc0m/0fi79ThS934HRKXiMJVj6rdK46TxUOvoYi7ao42f2IEjjgsAE+zqjGqY88IhfpKOskOPQ==}
+  coaia-narrative@0.19.1:
+    resolution: {integrity: sha512-+MuH5OZzVZ/OWdeJpFH6mwzcCTsMn7L96cUB+fOxppqEGBoNyBU3fU0zSAVhqlZnvgEFt07VYJu/jUBYyBUPNg==}
     engines: {node: '>=18.0.0'}
     hasBin: true
     peerDependencies:
@@ -3439,7 +3439,7 @@ snapshots:
       '@modelcontextprotocol/sdk': 1.0.1
       minimist: 1.2.8
 
-  coaia-narrative@0.19.0(coaia-memory@2.3.3):
+  coaia-narrative@0.19.1(coaia-memory@2.3.3):
     dependencies:
       '@modelcontextprotocol/sdk': 0.6.1
       coaia-memory: 2.3.3
