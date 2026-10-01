@@ -246,7 +246,7 @@ export default function TensionDetailPage({ params }: { params: Promise<{ id: st
                         <DialogDescription>
                           Name a strategic step that advances current reality toward the desired outcome.
                           {tension.github_owner && tension.github_repo && tension.github_issue_number && (
-                            <> This chart records {tension.github_owner}/{tension.github_repo}#{tension.github_issue_number}: the step is also opened there as a sub-issue.</>
+                            <> This chart records {tension.github_owner}/{tension.github_repo}#{tension.github_issue_number}: a signed-in writer's step is also opened there as a sub-issue.</>
                           )}
                         </DialogDescription>
                       </DialogHeader>

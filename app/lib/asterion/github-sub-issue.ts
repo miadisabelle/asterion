@@ -2,9 +2,10 @@
  * A step added on the site to a chart that records a GitHub issue opens a
  * sub-issue of that issue, through @miadi/github-actions.
  *
- * Only an instance holding MIADI_GH_TOKEN does this: the gaia instance, which
- * is reachable on the tailnet only. The public deployments have no token and
- * no sign-in, so a step added there stays on the site.
+ * Only an instance holding MIADI_GH_TOKEN does this, and only for a request
+ * from a signed-in writer (writer.ts, checked in the action-steps route).
+ * Since 2026-10-01 the public deployment holds the token too, so the writer
+ * check is what keeps an anonymous visitor from opening issues on GitHub.
  *
  * The sub-issue then comes back as structure: Miadi's webhook writes its chart
  * into the repository's issue charts through coaia-narrative, telescoped under

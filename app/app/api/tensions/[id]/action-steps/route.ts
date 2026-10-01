@@ -10,6 +10,7 @@ import {
   type CreateActionStepInput
 } from '@/lib/asterion'
 import { openSubIssue } from '@/lib/asterion/github-sub-issue'
+import { isWriter } from '@/lib/asterion/writer'
 
 export async function GET(
   request: NextRequest,
@@ -39,9 +40,13 @@ export async function POST(
     const { sub_issue: wantsSubIssue = true, ...input } = body
 
     // A chart that records a GitHub issue gets its new step as a sub-issue of that
-    // issue, when this instance holds a GitHub token (see github-sub-issue.ts).
+    // issue, when this instance holds a GitHub token (see github-sub-issue.ts) and
+    // the request is a writer's (see writer.ts). Anyone else adds the step here only.
     const tension = wantsSubIssue ? await getTensionById(id) : null
-    const outcome = tension
+    const linked = Boolean(tension?.github_owner && tension?.github_repo && tension?.github_issue_number)
+    const outcome = linked && !isWriter(request)
+      ? { kind: 'not-writer' as const }
+      : tension
       ? await openSubIssue(
           { owner: tension.github_owner, repo: tension.github_repo, number: tension.github_issue_number },
           { title: input.title, description: input.description },
@@ -71,6 +76,7 @@ export async function POST(
       // Said, never hidden: the step exists on the site either way.
       ...(outcome.kind === 'failed' ? { github_error: outcome.error } : {}),
       ...(outcome.kind === 'no-token' ? { github_note: 'This instance does not write to GitHub; the step stays on the site.' } : {}),
+      ...(outcome.kind === 'not-writer' ? { github_note: 'Only a signed-in writer opens steps on GitHub (/signin); the step stays on the site.' } : {}),
     }, { status: 201 })
   } catch (error) {
     console.error('Error creating action step:', error)
