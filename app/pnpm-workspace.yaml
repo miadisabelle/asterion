@@ -7,3 +7,4 @@ allowBuilds:
 minimumReleaseAgeExclude:
   # A package we author: excluded by name so each release installs the day it ships.
   - coaia-narrative
+  - '@miadi/github-actions'

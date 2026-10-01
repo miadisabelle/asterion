@@ -35,6 +35,7 @@ import {
   ChevronLeft, 
   Plus, 
   GitBranch,
+  Github,
   ArrowRight,
   AlertCircle,
   Clock,
@@ -62,6 +63,8 @@ export default function TensionDetailPage({ params }: { params: Promise<{ id: st
   const [isAddStepOpen, setIsAddStepOpen] = useState(false)
   const [isAddingStep, setIsAddingStep] = useState(false)
   const [isUpdating, setIsUpdating] = useState(false)
+  // What GitHub said about the last step added, when it was not a plain success.
+  const [stepNote, setStepNote] = useState<string | null>(null)
 
   const tension = data?.tension
 
@@ -79,10 +82,15 @@ export default function TensionDetailPage({ params }: { params: Promise<{ id: st
     setIsAddingStep(true)
 
     const formData = new FormData(e.currentTarget)
-    await createActionStep(tension.id, {
+    const result = await createActionStep(tension.id, {
       title: formData.get('title') as string,
       description: formData.get('description') as string || undefined,
     })
+    setStepNote(
+      result?.github_error ? `The step was added here, but GitHub said: ${result.github_error}`
+        : result?.github_note && tension.github_issue_number ? result.github_note
+        : null
+    )
 
     mutate(`/api/tensions/${id}`)
     setIsAddStepOpen(false)
@@ -237,6 +245,9 @@ export default function TensionDetailPage({ params }: { params: Promise<{ id: st
                         <DialogTitle>Add Action Step</DialogTitle>
                         <DialogDescription>
                           Name a strategic step that advances current reality toward the desired outcome.
+                          {tension.github_owner && tension.github_repo && tension.github_issue_number && (
+                            <> This chart records {tension.github_owner}/{tension.github_repo}#{tension.github_issue_number}: the step is also opened there as a sub-issue.</>
+                          )}
                         </DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4 py-4">
@@ -276,6 +287,9 @@ export default function TensionDetailPage({ params }: { params: Promise<{ id: st
               </div>
             </CardHeader>
             <CardContent>
+              {stepNote && (
+                <p className="mb-3 rounded-md border border-border p-2 text-xs text-muted-foreground">{stepNote}</p>
+              )}
               {actionSteps.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-8 text-center">
                   <AlertCircle className="h-8 w-8 text-muted-foreground mb-2" />
@@ -301,6 +315,15 @@ export default function TensionDetailPage({ params }: { params: Promise<{ id: st
                             <span className={`text-sm font-medium ${step.status === 'completed' ? 'line-through text-muted-foreground' : ''}`}>
                               {step.title}
                             </span>
+                            {(() => {
+                              const sub = (step.metadata as { github?: { subIssue?: { owner: string; repo: string; number: number; url: string; attached?: boolean } } } | null)?.github?.subIssue
+                              return sub?.url ? (
+                                <a href={sub.url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                                  <Github className="h-3 w-3" />
+                                  {sub.owner}/{sub.repo}#{sub.number}{sub.attached === false ? ' (not attached)' : ''}
+                                </a>
+                              ) : null
+                            })()}
                             {step.telescoped_to_tension_id && (
                               <Link href={`/tensions/${step.telescoped_to_tension_id}`}>
                                 <span className="inline-flex items-center gap-1 text-xs text-primary hover:underline">

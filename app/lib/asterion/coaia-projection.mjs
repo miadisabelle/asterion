@@ -32,11 +32,13 @@ import { createHash } from 'node:crypto'
 // The package that writes these files owns how they are read. Classification —
 // which line is an entity, a relation, or a legacy beat — comes from its contract,
 // so a dialect it learns is one Asterion reads without a change here.
-import { parseStore } from 'coaia-narrative/contract'
+import { parseStore, getWork } from 'coaia-narrative/contract'
 
 export const SYSTEM = 'coaia-narrative'
 /** Raise when the mapping changes, so every project re-projects on its next pass. */
-export const MAPPER_VERSION = 3
+// 4: parents from metadata.parentChart (what coaia-narrative writes), and a
+// telescoped child chart is work of its parent (contract getWork).
+export const MAPPER_VERSION = 4
 export const KEY_PATTERN = /^[a-z0-9][a-z0-9._-]{0,63}$/
 export const sourceFor = (key) => `${SYSTEM}:${key}`
 
@@ -145,12 +147,33 @@ export function planProjection(input, { file = null } = {}) {
   const byName = new Map(entities.map((e) => [e.name, e]))
   const of = (type) => entities.filter((e) => e.entityType === type)
   const chartIdOf = (e) => (typeof e.metadata.chartId === 'string' && e.metadata.chartId) || e.name.replace(/_chart$/, '')
+  const telescopeStepId = (childChartId) => `telescope:${childChartId}`
+  // Some writers (Miadi's chart editor, the visualizer) keep a flat step that names
+  // its child chart: telescopedToChartId, or telescopedChartId. That step already
+  // stands for the child, so the child is not added again as a second step.
+  const telescopedFrom = (s) => asText(s.metadata.telescopedToChartId) ?? asText(s.metadata.telescopedChartId)
+  const stepForChild = new Map()
+  for (const s of entities) {
+    if (s.entityType === 'action_step' && telescopedFrom(s)) stepForChild.set(telescopedFrom(s), s.name)
+  }
+  // coaia-narrative's own telescopeActionStep names the step on the child instead.
+  for (const c of entities) {
+    const step = c.entityType === 'structural_tension_chart' ? asText(c.metadata.parentActionStep) : null
+    if (step && byName.get(step)?.entityType === 'action_step') stepForChild.set(chartIdOf(c), step)
+  }
+  for (const [child, step] of stepForChild) {
+    const s = byName.get(step)
+    if (s && !telescopedFrom(s)) s.metadata = { ...s.metadata, telescopedToChartId: child }
+  }
 
-  // A chart's parent: stated in metadata, or carried by a telescopes_to edge
-  // whose source is an action step of the parent chart.
+  // A chart's parent: metadata.parentChart, the key coaia-narrative writes and its
+  // contract reads (getChildCharts); parentChartId from older writers; or a
+  // telescopes_to edge whose source is an action step of the parent chart.
   const parentOf = (chartId) => {
-    const stated = byName.get(`${chartId}_chart`)?.metadata.parentChartId
-    if (typeof stated === 'string' && stated) return stated
+    const meta = byName.get(`${chartId}_chart`)?.metadata ?? {}
+    for (const stated of [meta.parentChart, meta.parentChartId]) {
+      if (typeof stated === 'string' && stated && stated !== chartId) return stated
+    }
     for (const r of relations) {
       if (r.relationType !== 'telescopes_to') continue
       if (r.to !== chartId && r.to !== `${chartId}_chart`) continue
@@ -166,7 +189,12 @@ export function planProjection(input, { file = null } = {}) {
     const reality = byName.get(`${chartId}_current_reality`)
     const desired = text(outcome) || text(e) || chartId
     const steps = of('action_step').filter((s) => s.metadata.chartId === chartId)
-    const done = steps.filter((s) => s.metadata.completionStatus === true).length
+    // The chart's work, as the contract counts it: its flat steps and its telescoped
+    // child charts. A child becomes a step of this chart that telescopes to it.
+    const work = getWork(store, chartId)
+    const children = work.filter((w) => w.telescoped && byName.has(`${w.id}_chart`) && !stepForChild.has(w.id))
+    const done = steps.filter((s) => s.metadata.completionStatus === true).length + children.filter((w) => w.completed).length
+    const total = steps.length + children.length
     const beats = of('narrative_beat').filter((b) => b.metadata.chartId === chartId)
     const chart = {
       chartId,
@@ -178,9 +206,10 @@ export function planProjection(input, { file = null } = {}) {
       status: STATUSES.has(e.metadata.status) ? e.metadata.status : 'active',
       due_date: asDate(e.metadata.dueDate),
       telescope_depth: asInt(e.metadata.level) ?? 0,
-      progress: steps.length ? Math.round((done / steps.length) * 100) : 0,
+      progress: total ? Math.round((done / total) * 100) : 0,
       parentChartId: parentOf(chartId),
-      sourceActionStepId: asText(e.metadata.sourceActionStepId),
+      // A chart telescoped from its parent's work hangs off the step that stands for it.
+      sourceActionStepId: asText(e.metadata.sourceActionStepId) ?? stepForChild.get(chartId) ?? (parentOf(chartId) ? telescopeStepId(chartId) : null),
       elementsOfPerformance: Array.isArray(e.metadata.elementsOfPerformance) ? e.metadata.elementsOfPerformance : [],
       github: githubOf(e.metadata),
       steps: steps.map((s, i) => ({
@@ -190,7 +219,22 @@ export function planProjection(input, { file = null } = {}) {
         status: s.metadata.completionStatus === true ? 'completed' : 'pending',
         sort_order: i,
         dueDate: asDate(s.metadata.dueDate),
-        telescopedToChartId: asText(s.metadata.telescopedToChartId),
+        telescopedToChartId: telescopedFrom(s),
+      })).concat(children.map((w, i) => {
+        const childOutcome = byName.get(`${w.id}_desired_outcome`)
+        const childChart = byName.get(`${w.id}_chart`)
+        return {
+          name: telescopeStepId(w.id),
+          title: firstLine(text(childOutcome), 200) || w.id,
+          description: text(childOutcome),
+          status: w.completed ? 'completed' : 'pending',
+          sort_order: steps.length + i,
+          dueDate: asDate(w.dueDate),
+          telescopedToChartId: w.id,
+          // The GitHub issue the child records, so a step made on the site for that
+          // sub-issue can be recognised as this one.
+          github: githubOf(childChart?.metadata),
+        }
       })),
       beats: beats.map((b) => ({
         name: b.name,
@@ -441,6 +485,23 @@ export async function applyProjection(sql, plan, { project, actor, whole = true,
   const stepId = new Map()
   for (const c of plan.charts) {
     for (const s of c.steps) {
+      // A step made on the site that opened a GitHub sub-issue (metadata.github.subIssue)
+      // is the same step as the telescoped child that sub-issue's chart becomes: the
+      // projection adopts that row instead of adding a second one beside it.
+      if (s.telescopedToChartId && s.github?.number && s.github.owner && s.github.repo) {
+        await sql.query(
+          `UPDATE asterion.action_steps SET external_id = $1, external_source = $2
+            WHERE id = (
+              SELECT id FROM asterion.action_steps
+               WHERE tension_id = $3 AND external_source IS NULL
+                 AND (metadata->'github'->'subIssue'->>'number')::int = $4
+                 AND lower(metadata->'github'->'subIssue'->>'owner') = lower($5)
+                 AND lower(metadata->'github'->'subIssue'->>'repo') = lower($6)
+               LIMIT 1)
+              AND NOT EXISTS (SELECT 1 FROM asterion.action_steps WHERE external_source = $2 AND external_id = $1)`,
+          [s.name, source, tensionId.get(c.chartId), s.github.number, s.github.owner, s.github.repo]
+        )
+      }
       const row = await one(
         `INSERT INTO asterion.action_steps
            (external_id, external_source, tension_id, title, description, status, sort_order, metadata)
@@ -452,7 +513,10 @@ export async function applyProjection(sql, plan, { project, actor, whole = true,
          RETURNING id`,
         [
           s.name, source, tensionId.get(c.chartId), s.title, s.description, s.status, s.sort_order,
-          JSON.stringify({ dueDate: s.dueDate, telescopedToChartId: s.telescopedToChartId, source: { system: SYSTEM, key, entity: s.name } }),
+          JSON.stringify({
+            dueDate: s.dueDate, telescopedToChartId: s.telescopedToChartId, source: { system: SYSTEM, key, entity: s.name },
+            ...(s.github?.number ? { github: { subIssue: { owner: s.github.owner, repo: s.github.repo, number: s.github.number } } } : {}),
+          }),
         ]
       )
       stepId.set(s.name, row.id)

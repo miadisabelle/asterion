@@ -11,6 +11,9 @@ importers:
       '@hookform/resolvers':
         specifier: ^3.9.1
         version: 3.10.0(react-hook-form@7.71.1(react@19.2.4))
+      '@miadi/github-actions':
+        specifier: ^0.1.0
+        version: 0.1.0
       '@neondatabase/serverless':
         specifier: ^1.1.0
         version: 1.1.0
@@ -117,8 +120,8 @@ importers:
         specifier: 1.1.1
         version: 1.1.1(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       coaia-narrative:
-        specifier: ^0.19.2
-        version: 0.19.2(coaia-memory@2.3.3)
+        specifier: ^0.20.0
+        version: 0.20.0(coaia-memory@2.3.3)
       date-fns:
         specifier: 4.1.0
         version: 4.1.0
@@ -424,6 +427,10 @@ packages:
 
   '@mermaid-js/parser@1.1.1':
     resolution: {integrity: sha512-VuHdsYMK1bT6X2JbcAaWAhugTRvRBRyuZgd+c22swUeI9g/ntaxF7CY7dYarhZovofCbUNO0G7JesfmNtjYOCw==}
+
+  '@miadi/github-actions@0.1.0':
+    resolution: {integrity: sha512-ACrDwhglG9B74667VGBHDQzwXSkQg4uiKZT8SCxACmMgbZ1yyD88vWy2dUQbQsbK0nqhmu9Lp97riQXhLrI/4Q==}
+    engines: {node: '>=20.19'}
 
   '@modelcontextprotocol/sdk@0.6.1':
     resolution: {integrity: sha512-OkVXMix3EIbB5Z6yife2XTrSlOnVvCLR1Kg91I4pYFEsV9RbnoyQVScXCuVhGaZHOnTZgso8lMQN1Po2TadGKQ==}
@@ -1451,8 +1458,8 @@ packages:
     resolution: {integrity: sha512-0NWLlLQvIr8oRhDx2h1UuRd+sn57t5U5SEqdxA6P+TJkY9TpWrdZzT1aDdFQSzy7sjvEm02cArdDeiFcxSWWfQ==}
     hasBin: true
 
-  coaia-narrative@0.19.2:
-    resolution: {integrity: sha512-k/Ne6kfpvUwPYaCGm1Xzf52Dc8PVktz+Z1KFTKHyDlyVJNWe52EjL9XZIZ8r9GW0r/yi/zZksFmFHoXsXljxHQ==}
+  coaia-narrative@0.20.0:
+    resolution: {integrity: sha512-ybrkfw0HLU4m9QGq22u5a8PnRE8dlUL0pOrFs4/1URwJHWKSb2+pPQ5YG8Lj3UBkWOz7nJGfiEDcueoYad/SMQ==}
     engines: {node: '>=18.0.0'}
     hasBin: true
     peerDependencies:
@@ -2399,6 +2406,8 @@ snapshots:
   '@mermaid-js/parser@1.1.1':
     dependencies:
       '@chevrotain/types': 11.1.2
+
+  '@miadi/github-actions@0.1.0': {}
 
   '@modelcontextprotocol/sdk@0.6.1':
     dependencies:
@@ -3439,7 +3448,7 @@ snapshots:
       '@modelcontextprotocol/sdk': 1.0.1
       minimist: 1.2.8
 
-  coaia-narrative@0.19.2(coaia-memory@2.3.3):
+  coaia-narrative@0.20.0(coaia-memory@2.3.3):
     dependencies:
       '@modelcontextprotocol/sdk': 0.6.1
       coaia-memory: 2.3.3
