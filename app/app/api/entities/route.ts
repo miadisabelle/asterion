@@ -8,6 +8,7 @@ import {
   logEvent,
   type CreateEntityInput
 } from '@/lib/asterion'
+import { requireWriter } from '@/lib/asterion/writer'
 
 export async function GET(request: NextRequest) {
   try {
@@ -41,6 +42,8 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const denied = requireWriter(request)
+  if (denied) return denied
   try {
     const body = await request.json() as CreateEntityInput
     

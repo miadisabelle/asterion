@@ -8,6 +8,7 @@ import {
   type EdgeType
 } from '@/lib/asterion'
 import { sql } from '@/lib/asterion/db'
+import { requireWriter } from '@/lib/asterion/writer'
 
 export async function GET(
   request: NextRequest,
@@ -48,6 +49,8 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = requireWriter(request)
+  if (denied) return denied
   try {
     const { id } = await params
     const body = await request.json() as {

@@ -1,3 +1,4 @@
+import { requireWriter } from '@/lib/asterion/writer'
 import { NextResponse } from 'next/server';
 import { getDocPages, createDocPage } from '@/lib/docs/data';
 import type { DocOrigin, DocType, DocStatus } from '@/lib/docs/types';
@@ -23,6 +24,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const denied = requireWriter(request)
+  if (denied) return denied
   try {
     const data = await request.json();
     

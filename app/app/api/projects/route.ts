@@ -8,6 +8,7 @@ import {
   logEvent,
   type CreateProjectInput
 } from '@/lib/asterion'
+import { requireWriter } from '@/lib/asterion/writer'
 
 export async function GET() {
   try {
@@ -23,6 +24,8 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const denied = requireWriter(request)
+  if (denied) return denied
   try {
     const body = await request.json() as CreateProjectInput
     

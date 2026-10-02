@@ -1,3 +1,4 @@
+import { requireWriter } from '@/lib/asterion/writer'
 import { NextResponse } from 'next/server';
 import { updateDocSection, deleteDocSection, getDocRevisions } from '@/lib/docs/data';
 
@@ -5,6 +6,8 @@ export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = requireWriter(request)
+  if (denied) return denied
   try {
     const { id } = await params;
     const data = await request.json();
@@ -22,6 +25,8 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = requireWriter(request)
+  if (denied) return denied
   try {
     const { id } = await params;
     await deleteDocSection(id);

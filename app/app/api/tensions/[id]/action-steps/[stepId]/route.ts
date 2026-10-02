@@ -2,11 +2,14 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { updateActionStepStatus, logEvent } from '@/lib/asterion'
+import { requireWriter } from '@/lib/asterion/writer'
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; stepId: string }> }
 ) {
+  const denied = requireWriter(request)
+  if (denied) return denied
   try {
     const { id: tensionId, stepId } = await params
     const body = await request.json() as { status: string }

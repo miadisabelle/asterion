@@ -1,3 +1,4 @@
+import { requireWriter } from '@/lib/asterion/writer'
 import { NextResponse } from 'next/server';
 import { sql } from '@/lib/asterion/db';
 
@@ -546,7 +547,9 @@ PDE does this same breaking-down for computer work!
   }
 ];
 
-export async function POST() {
+export async function POST(request: Request) {
+  const denied = requireWriter(request)
+  if (denied) return denied
   try {
     for (const pageData of SEED_PAGES) {
       // Check if page already exists

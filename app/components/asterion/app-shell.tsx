@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { useIsMobile } from '@/components/ui/use-mobile'
 import { Button } from '@/components/ui/button'
+import { SessionBadge } from '@/components/asterion/session-badge'
 import {
   Sheet,
   SheetContent,
@@ -113,11 +114,14 @@ export function AppShell({ children, title, actions }: AppShellProps) {
                   <h1 className="text-base md:text-lg font-semibold truncate">{title}</h1>
                 )}
               </div>
-              {actions && (
-                <div className="flex items-center gap-2">
-                  {actions}
-                </div>
-              )}
+              <div className="flex items-center gap-3">
+                {actions && (
+                  <div className="flex items-center gap-2">
+                    {actions}
+                  </div>
+                )}
+                <SessionBadge />
+              </div>
             </div>
           </header>
 
