@@ -322,7 +322,12 @@ export const sameFile = (a, b) => a.kind === b.kind && a.path === b.path && (a.r
  * Register (or update) a project. files: the files the registry sync reads, or
  * [] for a project fed by its writer through the door.
  */
-export async function upsertProject(sql, { key, name, description = null, files = [] }) {
+// visibility: 'private' shows the project's rows to signed-in writers only (lib/asterion/visibility.ts);
+// 'public' shows them to everyone; undefined keeps what the project already has.
+export async function upsertProject(sql, { key, name, description = null, files = [], visibility }) {
+  if (visibility !== undefined && visibility !== 'private' && visibility !== 'public') {
+    throw new Error(`visibility must be 'private' or 'public': ${visibility}`)
+  }
   if (!KEY_PATTERN.test(key)) throw new Error(`project key must match ${KEY_PATTERN}: ${key}`)
   files = files.map(normalizeSourceFile)
   for (const f of files) {
@@ -338,6 +343,7 @@ export async function upsertProject(sql, { key, name, description = null, files 
   })
   const metadata = {
     ...(existing?.metadata ?? {}),
+    ...(visibility === 'private' ? { visibility } : {}),
     source: {
       ...(existing?.metadata?.source ?? {}),
       system: SYSTEM,
@@ -346,6 +352,7 @@ export async function upsertProject(sql, { key, name, description = null, files 
       registeredAt: existing?.metadata?.source?.registeredAt ?? new Date().toISOString(),
     },
   }
+  if (visibility === 'public') delete metadata.visibility
   const rows = await sql.query(
     `INSERT INTO asterion.projects (external_id, external_source, name, codename, description, metadata)
      VALUES ($1, $2, $3, $4, $5, $6)

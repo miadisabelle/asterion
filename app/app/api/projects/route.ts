@@ -9,10 +9,11 @@ import {
   type CreateProjectInput
 } from '@/lib/asterion'
 import { requireWriter } from '@/lib/asterion/writer'
+import { viewerOf } from '@/lib/asterion/visibility'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const projects = await getProjects()
+    const projects = await getProjects(viewerOf(request))
     return NextResponse.json({ projects })
   } catch (error) {
     console.error('Error fetching projects:', error)

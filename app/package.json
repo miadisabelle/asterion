@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --port ${PORT:-3336}",
-    "build": "next build",
+    "build": "node scripts/check-write-gates.mjs && node scripts/check-read-gates.mjs && next build",
     "start": "next start --port ${PORT:-3336}",
     "lint": "eslint .",
     "db:provision": "node scripts/db-provision.mjs",

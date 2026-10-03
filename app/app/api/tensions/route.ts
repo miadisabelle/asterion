@@ -12,6 +12,7 @@ import {
   type CreateTensionInput 
 } from '@/lib/asterion'
 import { requireWriter } from '@/lib/asterion/writer'
+import { viewerOf } from '@/lib/asterion/visibility'
 
 export async function GET(request: NextRequest) {
   try {
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest) {
       filters.parent_id = parentId
     }
 
-    const tensions = await getTensions(filters)
+    const tensions = await getTensions(filters, viewerOf(request))
     
     return NextResponse.json({ tensions })
   } catch (error) {

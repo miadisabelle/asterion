@@ -9,6 +9,7 @@ import {
   type CreateEntityInput
 } from '@/lib/asterion'
 import { requireWriter } from '@/lib/asterion/writer'
+import { viewerOf } from '@/lib/asterion/visibility'
 
 export async function GET(request: NextRequest) {
   try {
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest) {
     const externalSource = searchParams.get('external_source')
     if (externalSource) filters.external_source = externalSource
 
-    const entities = await getEntities(filters)
+    const entities = await getEntities(filters, viewerOf(request))
     
     return NextResponse.json({ entities })
   } catch (error) {

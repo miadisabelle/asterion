@@ -61,7 +61,8 @@ export default function SettingsPage() {
           <CardHeader className="pb-2">
             <CardTitle className="text-base">Chart sources</CardTitle>
             <CardDescription>
-              The coaia-narrative memories this Asterion reads. A memory that is not registered here is never shown.{' '}
+              The coaia-narrative memories this Asterion reads. A memory that is not registered here is never shown,
+              and a private one is shown only to signed-in writers.{' '}
               <Link href="/bridge" className="underline underline-offset-4">How charts arrive</Link>
             </CardDescription>
           </CardHeader>
@@ -79,6 +80,9 @@ export default function SettingsPage() {
                     <li key={p.id}>
                       <Link href={`/projects/${p.id}`} className="font-medium hover:underline">{p.name}</Link>
                       <span className="ml-2 font-mono text-xs text-muted-foreground">coaia-narrative:{src.key}</span>
+                      {p.metadata?.visibility === 'private' && (
+                        <span className="ml-2 rounded-full bg-muted px-2 py-0.5 text-xs">private: signed-in writers only</span>
+                      )}
                       <p className="text-xs text-muted-foreground">
                         {files.length === 0 ? 'Written by its agent through the door.' : files.map((f) => f.name).join(', ')}
                       </p>
@@ -89,7 +93,7 @@ export default function SettingsPage() {
             )}
             <p className="text-xs text-muted-foreground">
               Registering a memory is done on the host that runs the sync:{' '}
-              <code className="rounded bg-background px-1.5 py-0.5 font-mono">node scripts/coaia-sync.mjs register &lt;key&gt; --name &quot;…&quot; --file &lt;path&gt;</code>
+              <code className="rounded bg-background px-1.5 py-0.5 font-mono">node scripts/coaia-sync.mjs register &lt;key&gt; --name &quot;…&quot; --file &lt;path&gt; [--private]</code>
             </p>
           </CardContent>
         </Card>

@@ -8,6 +8,7 @@ import {
   type LogEventInput
 } from '@/lib/asterion'
 import { requireWriter } from '@/lib/asterion/writer'
+import { viewerOf } from '@/lib/asterion/visibility'
 
 export async function GET(request: NextRequest) {
   try {
@@ -32,7 +33,7 @@ export async function GET(request: NextRequest) {
     const offset = searchParams.get('offset')
     if (offset) filters.offset = parseInt(offset, 10)
 
-    const events = await getEvents(filters)
+    const events = await getEvents(filters, viewerOf(request))
     
     return NextResponse.json({ events })
   } catch (error) {

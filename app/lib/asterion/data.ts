@@ -2,6 +2,7 @@
 import { sql } from './db'
 import { invalidateCache, getCache, setCache } from './redis'
 import { publicProject } from './coaia-projection.mjs'
+import { PRIVATE_PROJECT_IDS, PRIVATE_SOURCES, PRIVATE_TENSION_IDS, PRIVATE_THREAD_IDS, seesPrivate, type Viewer } from './visibility'
 import type { 
   Project, 
   CreateProjectInput,
@@ -21,15 +22,16 @@ import type {
 
 // ============== PROJECTS ==============
 
-export async function getProjects(): Promise<Project[]> {
-  const cacheKey = 'projects:all'
+export async function getProjects(viewer: Viewer): Promise<Project[]> {
+  const all = seesPrivate(viewer)
+  const cacheKey = all ? 'projects:all:writer' : 'projects:all'
   // The cache is shared with every deployment, so what it holds is made public on the way out too.
   const cached = await getCache<Project[]>(cacheKey)
   if (cached) return cached.map((p) => publicProject(p) as Project)
 
-  const result = await sql`
-    SELECT * FROM asterion.projects ORDER BY created_at DESC
-  `
+  const result = await sql.query(
+    `SELECT * FROM asterion.projects ${all ? '' : `WHERE id NOT IN (${PRIVATE_PROJECT_IDS})`} ORDER BY created_at DESC`
+  )
   
   // A registered project's source files are local paths on one host; the public shape names them only.
   const projects = (result as Project[]).map((p) => publicProject(p) as Project)
@@ -44,17 +46,20 @@ export async function getProjectById(id: string): Promise<Project | null> {
   return result[0] ? (publicProject(result[0]) as Project) : null
 }
 
-export async function getProjectWithTensions(id: string): Promise<Project | null> {
+export async function getProjectWithTensions(id: string, viewer: Viewer): Promise<Project | null> {
   const project = await getProjectById(id)
   if (!project) return null
+  const all = seesPrivate(viewer)
+  if (!all && project.metadata?.visibility === 'private') return null
 
-  const tensions = await sql`
-    SELECT pt.*, t.* 
-    FROM asterion.project_tensions pt
-    JOIN asterion.tensions t ON pt.tension_id = t.id
-    WHERE pt.project_id = ${id}
-    ORDER BY pt.sort_order
-  `
+  const tensions = await sql.query(
+    `SELECT pt.*, t.*
+     FROM asterion.project_tensions pt
+     JOIN asterion.tensions t ON pt.tension_id = t.id
+     WHERE pt.project_id = $1 ${all ? '' : `AND t.id NOT IN (${PRIVATE_TENSION_IDS})`}
+     ORDER BY pt.sort_order`,
+    [id]
+  )
 
   return {
     ...project,
@@ -130,12 +135,12 @@ export async function getLayerById(id: string): Promise<Layer | null> {
 
 // ============== KNOWLEDGE GRAPH - ENTITIES ==============
 
-export async function getEntities(filters?: {
+export async function getEntities(filters: {
   entity_type?: string
   layer_id?: string
   external_source?: string
-}): Promise<Entity[]> {
-  const conditions: string[] = []
+} | undefined, viewer: Viewer): Promise<Entity[]> {
+  const conditions: string[] = seesPrivate(viewer) ? [] : [`COALESCE(external_source, '') NOT IN (${PRIVATE_SOURCES})`]
   const params: unknown[] = []
   let paramIndex = 1
 
@@ -300,21 +305,24 @@ export async function createMMOTEvaluation(
   return result[0] as MMOTEvaluation
 }
 
-export async function getMMOTEvaluations(tensionId: string): Promise<MMOTEvaluation[]> {
-  const result = await sql`
-    SELECT * FROM asterion.mmot_evaluations 
-    WHERE tension_id = ${tensionId}
-    ORDER BY created_at DESC
-  `
+export async function getMMOTEvaluations(tensionId: string, viewer: Viewer): Promise<MMOTEvaluation[]> {
+  const result = await sql.query(
+    `SELECT * FROM asterion.mmot_evaluations
+     WHERE tension_id = $1 ${seesPrivate(viewer) ? '' : `AND tension_id NOT IN (${PRIVATE_TENSION_IDS})`}
+     ORDER BY created_at DESC`,
+    [tensionId]
+  )
   return result as MMOTEvaluation[]
 }
 
 // ============== NARRATIVE THREADS ==============
 
-export async function getNarrativeThreads(): Promise<NarrativeThread[]> {
-  const result = await sql`
-    SELECT * FROM asterion.narrative_threads ORDER BY created_at DESC
-  `
+export async function getNarrativeThreads(viewer: Viewer): Promise<NarrativeThread[]> {
+  const result = await sql.query(
+    `SELECT * FROM asterion.narrative_threads
+     ${seesPrivate(viewer) ? '' : `WHERE id NOT IN (${PRIVATE_THREAD_IDS})`}
+     ORDER BY created_at DESC`
+  )
   return result as NarrativeThread[]
 }
 
@@ -398,13 +406,21 @@ export async function logEvent(input: LogEventInput): Promise<AsterionEvent> {
   return result[0] as AsterionEvent
 }
 
-export async function getEvents(filters?: {
+export async function getEvents(filters: {
   tension_id?: string
   event_type?: string
   limit?: number
   offset?: number
-}): Promise<AsterionEvent[]> {
-  const conditions: string[] = []
+} | undefined, viewer: Viewer): Promise<AsterionEvent[]> {
+  // An event belongs to a private project through its chart, its source, its project, or a chart it names.
+  const conditions: string[] = seesPrivate(viewer) ? [] : [
+    `COALESCE(tension_id::text, '') NOT IN (SELECT id::text FROM (${PRIVATE_TENSION_IDS}) h)`,
+    `COALESCE(payload->>'external_source', '') NOT IN (${PRIVATE_SOURCES})`,
+    `COALESCE(payload->>'project_id', '') NOT IN (SELECT id::text FROM (${PRIVATE_PROJECT_IDS}) p)`,
+    `COALESCE(payload->>'tension_id', '') NOT IN (SELECT id::text FROM (${PRIVATE_TENSION_IDS}) h)`,
+    `COALESCE(payload->>'to_tension_id', '') NOT IN (SELECT id::text FROM (${PRIVATE_TENSION_IDS}) h)`,
+    `COALESCE(payload->>'parent_tension_id', '') NOT IN (SELECT id::text FROM (${PRIVATE_TENSION_IDS}) h)`,
+  ]
   const params: unknown[] = []
   let paramIndex = 1
 

@@ -13,6 +13,7 @@ import {
   type UpdateTensionInput
 } from '@/lib/asterion'
 import { requireWriter } from '@/lib/asterion/writer'
+import { viewerOf } from '@/lib/asterion/visibility'
 
 export async function GET(
   request: NextRequest,
@@ -20,7 +21,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params
-    const tension = await getTensionWithRelations(id)
+    const tension = await getTensionWithRelations(id, viewerOf(request))
     
     if (!tension) {
       return NextResponse.json(
@@ -50,7 +51,7 @@ export async function PATCH(
     const body = await request.json() as UpdateTensionInput
     
     // Get current tension for validation
-    const current = await getTensionWithRelations(id)
+    const current = await getTensionWithRelations(id, viewerOf(request))
     if (!current) {
       return NextResponse.json(
         { error: 'Tension not found' },
@@ -119,7 +120,7 @@ export async function DELETE(
   if (denied) return denied
   try {
     const { id } = await params
-    const tension = await getTensionWithRelations(id)
+    const tension = await getTensionWithRelations(id, viewerOf(request))
     
     if (!tension) {
       return NextResponse.json(

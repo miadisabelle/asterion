@@ -9,6 +9,7 @@ import {
   type MMOTPhase
 } from '@/lib/asterion'
 import { requireWriter } from '@/lib/asterion/writer'
+import { viewerOf } from '@/lib/asterion/visibility'
 
 export async function GET(
   request: NextRequest,
@@ -16,7 +17,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params
-    const evaluations = await getMMOTEvaluations(id)
+    const evaluations = await getMMOTEvaluations(id, viewerOf(request))
     
     return NextResponse.json({ evaluations })
   } catch (error) {

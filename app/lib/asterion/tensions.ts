@@ -1,6 +1,7 @@
 // Asterion Data Access Layer - Tensions
 import { sql } from './db'
 import { invalidateCache, getCache, setCache } from './redis'
+import { BOOKKEEPING, PRIVATE_TENSION_IDS, seesPrivate, type Viewer } from './visibility'
 import type { 
   Tension, 
   CreateTensionInput, 
@@ -13,18 +14,26 @@ import type {
 
 // ============== TENSIONS ==============
 
-export async function getTensions(filters?: {
+/** Ids of the charts this viewer may not see; empty for a writer. */
+export async function hiddenTensionIds(viewer: Viewer): Promise<Set<string>> {
+  if (seesPrivate(viewer)) return new Set()
+  const rows = await sql.query(PRIVATE_TENSION_IDS)
+  return new Set((rows as Array<{ id: string }>).map((r) => r.id))
+}
+
+export async function getTensions(filters: {
   phase?: Tension['phase']
   status?: Tension['status']
   layer_id?: string
   parent_id?: string | null
-}): Promise<Tension[]> {
-  const cacheKey = `tensions:${JSON.stringify(filters || {})}`
+} | undefined, viewer: Viewer): Promise<Tension[]> {
+  const all = seesPrivate(viewer)
+  const cacheKey = `tensions:${all ? 'writer:' : ''}${JSON.stringify(filters || {})}`
   const cached = await getCache<Tension[]>(cacheKey)
   if (cached) return cached
 
   // Build conditions array for the WHERE clause
-  const conditions: string[] = []
+  const conditions: string[] = all ? [] : [`id NOT IN (${PRIVATE_TENSION_IDS})`]
   const params: unknown[] = []
   let paramIndex = 1
 
@@ -85,7 +94,9 @@ export async function getTensionById(id: string): Promise<Tension | null> {
   return tension
 }
 
-export async function getTensionWithRelations(id: string): Promise<Tension | null> {
+export async function getTensionWithRelations(id: string, viewer: Viewer): Promise<Tension | null> {
+  const hidden = await hiddenTensionIds(viewer)
+  if (hidden.has(id)) return null
   const tension = await getTensionById(id)
   if (!tension) return null
 
@@ -109,10 +120,10 @@ export async function getTensionWithRelations(id: string): Promise<Tension | nul
 
   return {
     ...tension,
-    children: children as Tension[],
+    children: (children as Tension[]).filter((c) => !hidden.has(c.id)),
     action_steps: actionSteps as ActionStep[],
-    edges_from: edgesFrom as TensionEdge[],
-    edges_to: edgesTo as TensionEdge[],
+    edges_from: (edgesFrom as TensionEdge[]).filter((e) => !hidden.has(e.to_tension_id)),
+    edges_to: (edgesTo as TensionEdge[]).filter((e) => !hidden.has(e.from_tension_id)),
   }
 }
 
@@ -237,7 +248,8 @@ export async function deleteTension(id: string): Promise<boolean> {
 
 // ============== ACTION STEPS ==============
 
-export async function getActionSteps(tensionId: string): Promise<ActionStep[]> {
+export async function getActionSteps(tensionId: string, viewer: Viewer): Promise<ActionStep[]> {
+  if ((await hiddenTensionIds(viewer)).has(tensionId)) return []
   const result = await sql`
     SELECT * FROM asterion.action_steps 
     WHERE tension_id = ${tensionId}
@@ -288,7 +300,7 @@ export async function updateActionStepStatus(
 }
 
 async function updateTensionProgress(tensionId: string): Promise<void> {
-  const steps = await getActionSteps(tensionId)
+  const steps = await getActionSteps(tensionId, BOOKKEEPING)
   if (steps.length === 0) return
 
   const completed = steps.filter(s => s.status === 'completed').length
@@ -386,7 +398,7 @@ export async function getBlockingTensions(tensionId: string): Promise<Tension[]>
 }
 
 // Get tension dependency graph for visualization
-export async function getTensionGraph(rootTensionId?: string): Promise<{
+export async function getTensionGraph(rootTensionId: string | undefined, viewer: Viewer): Promise<{
   nodes: Tension[]
   edges: TensionEdge[]
 }> {
@@ -435,8 +447,9 @@ export async function getTensionGraph(rootTensionId?: string): Promise<{
       : sql.query(edgesQuery),
   ])
 
+  const hidden = await hiddenTensionIds(viewer)
   return {
-    nodes: nodes as Tension[],
-    edges: edges as TensionEdge[],
+    nodes: (nodes as Tension[]).filter((t) => !hidden.has(t.id)),
+    edges: (edges as TensionEdge[]).filter((e) => !hidden.has(e.from_tension_id) && !hidden.has(e.to_tension_id)),
   }
 }

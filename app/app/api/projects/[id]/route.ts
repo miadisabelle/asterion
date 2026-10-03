@@ -9,6 +9,7 @@ import {
   logEvent
 } from '@/lib/asterion'
 import { requireWriter } from '@/lib/asterion/writer'
+import { viewerOf } from '@/lib/asterion/visibility'
 
 export async function GET(
   request: NextRequest,
@@ -16,7 +17,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params
-    const project = await getProjectWithTensions(id)
+    const project = await getProjectWithTensions(id, viewerOf(request))
     
     if (!project) {
       return NextResponse.json(

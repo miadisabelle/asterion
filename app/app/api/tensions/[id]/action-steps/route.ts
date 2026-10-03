@@ -11,6 +11,7 @@ import {
 } from '@/lib/asterion'
 import { openSubIssue } from '@/lib/asterion/github-sub-issue'
 import { requireWriter } from '@/lib/asterion/writer'
+import { viewerOf } from '@/lib/asterion/visibility'
 
 export async function GET(
   request: NextRequest,
@@ -18,7 +19,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params
-    const actionSteps = await getActionSteps(id)
+    const actionSteps = await getActionSteps(id, viewerOf(request))
     
     return NextResponse.json({ action_steps: actionSteps })
   } catch (error) {

@@ -2,13 +2,14 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getTensionGraph } from '@/lib/asterion'
+import { viewerOf } from '@/lib/asterion/visibility'
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const rootId = searchParams.get('root_id') || undefined
 
-    const graph = await getTensionGraph(rootId)
+    const graph = await getTensionGraph(rootId, viewerOf(request))
     
     return NextResponse.json({ 
       nodes: graph.nodes,

@@ -9,6 +9,8 @@ import {
 } from '@/lib/asterion'
 import { sql } from '@/lib/asterion/db'
 import { requireWriter } from '@/lib/asterion/writer'
+import { viewerOf } from '@/lib/asterion/visibility'
+import { hiddenTensionIds } from '@/lib/asterion/tensions'
 
 export async function GET(
   request: NextRequest,
@@ -16,7 +18,9 @@ export async function GET(
 ) {
   try {
     const { id } = await params
-    
+    const hidden = await hiddenTensionIds(viewerOf(request))
+    if (hidden.has(id)) return NextResponse.json({ edges_from: [], edges_to: [] })
+
     const [edgesFrom, edgesTo] = await Promise.all([
       sql`
         SELECT te.*, t.title as to_tension_title 
@@ -32,9 +36,9 @@ export async function GET(
       `,
     ])
 
-    return NextResponse.json({ 
-      edges_from: edgesFrom,
-      edges_to: edgesTo 
+    return NextResponse.json({
+      edges_from: (edgesFrom as Array<{ to_tension_id: string }>).filter((e) => !hidden.has(e.to_tension_id)),
+      edges_to: (edgesTo as Array<{ from_tension_id: string }>).filter((e) => !hidden.has(e.from_tension_id)),
     })
   } catch (error) {
     console.error('Error fetching tension edges:', error)

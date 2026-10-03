@@ -4,6 +4,7 @@
 //   node scripts/coaia-sync.mjs register <key> --name "<name>" --git <checkout> --path <path> [--remote origin] [--ref origin/main]
 //   node scripts/coaia-sync.mjs register <key> --name "<name>" --file <absolute path>
 //   node scripts/coaia-sync.mjs register <key> --name "<name>" --writer
+//   (any register also takes --private or --public; a new project is public unless --private)
 //   node scripts/coaia-sync.mjs list
 //   node scripts/coaia-sync.mjs sync [<key>] [--force] [--dry-run] [--archive-orphans]
 //
@@ -13,7 +14,10 @@
 //   - --writer: no files; its writer posts the whole memory file to
 //     POST /api/ingest/coaia-narrative, and this sync leaves it alone.
 // A project that is not registered is never read and the door refuses it, which
-// is how what reaches the public site stays a decision.
+// is how what reaches the public site stays a decision. A --private project is
+// read and projected like any other, and only signed-in writers see its rows
+// (lib/asterion/visibility.ts). Register a memory from a private repository with
+// --private in the same command that first registers it, so no pass runs before.
 //
 // sync reads a git file from a remote-tracking ref after fetching that remote,
 // never through a working tree (a checkout like the chronicle is shared by
@@ -83,13 +87,17 @@ async function register(sql) {
     console.error('a new project needs --git … --path …, --file …, or --writer')
     process.exit(1)
   }
+  if (has('--private') && has('--public')) { console.error('choose --private or --public, not both'); process.exit(1) }
   const project = await upsertProject(sql, {
     key,
     name: flag('--name') ?? existing?.name ?? key,
     description: flag('--description') ?? existing?.description ?? null,
     files,
+    visibility: has('--private') ? 'private' : has('--public') ? 'public' : undefined,
   })
-  console.log(`registered ${project.name} as ${sourceFor(key)}`)
+  const cache = await invalidateCaches(CACHE_PATTERNS)
+  if (cache.error) console.log(`caches not dropped: ${cache.error}`)
+  console.log(`registered ${project.name} as ${sourceFor(key)}, ${project.metadata?.visibility === 'private' ? 'private: signed-in writers only' : 'public'}`)
   const now = registeredFiles(project)
   for (const f of now) console.log(`  ${describe(f)}`)
   if (!now.length) console.log('  fed by its writer through POST /api/ingest/coaia-narrative')
@@ -100,7 +108,7 @@ async function list(sql) {
   if (!projects.length) { console.log('no registered projects'); return }
   for (const p of projects) {
     const projected = p.metadata?.source?.projectedAt ? `projected ${p.metadata.source.projectedAt}` : 'never projected'
-    console.log(`${p.external_id.padEnd(16)} ${p.name}  (${p.tension_count} tension(s), ${projected})`)
+    console.log(`${p.external_id.padEnd(16)} ${p.name}  (${p.tension_count} tension(s), ${projected})${p.metadata?.visibility === 'private' ? '  PRIVATE' : ''}`)
     const files = registeredFiles(p)
     if (!files.length) console.log('  fed by its writer through the door')
     for (const f of files) {

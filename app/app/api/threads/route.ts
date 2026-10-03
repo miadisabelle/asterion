@@ -8,10 +8,11 @@ import {
   logEvent
 } from '@/lib/asterion'
 import { requireWriter } from '@/lib/asterion/writer'
+import { viewerOf } from '@/lib/asterion/visibility'
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const threads = await getNarrativeThreads()
+    const threads = await getNarrativeThreads(viewerOf(request))
     return NextResponse.json({ threads })
   } catch (error) {
     console.error('Error fetching narrative threads:', error)
