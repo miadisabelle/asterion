@@ -24,8 +24,10 @@ import type {
 
 export async function getProjects(viewer: Viewer): Promise<Project[]> {
   const all = seesPrivate(viewer)
-  const cacheKey = all ? 'projects:all:writer' : 'projects:all'
   // The cache is shared with every deployment, so what it holds is made public on the way out too.
+  // These keys are new: a deployment from before private projects caches every project under
+  // 'projects:all', and a public read must never pick that list up.
+  const cacheKey = all ? 'projects:writer' : 'projects:public'
   const cached = await getCache<Project[]>(cacheKey)
   if (cached) return cached.map((p) => publicProject(p) as Project)
 

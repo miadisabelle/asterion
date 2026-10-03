@@ -28,7 +28,8 @@ export async function getTensions(filters: {
   parent_id?: string | null
 } | undefined, viewer: Viewer): Promise<Tension[]> {
   const all = seesPrivate(viewer)
-  const cacheKey = `tensions:${all ? 'writer:' : ''}${JSON.stringify(filters || {})}`
+  // Never 'tensions:{…}': a deployment from before private projects caches unfiltered lists there.
+  const cacheKey = `tensions:${all ? 'writer' : 'public'}:${JSON.stringify(filters || {})}`
   const cached = await getCache<Tension[]>(cacheKey)
   if (cached) return cached
 
