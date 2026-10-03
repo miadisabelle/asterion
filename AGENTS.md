@@ -22,6 +22,16 @@ which is idempotent.
 `app/.env.local` carries the Neon/Redis credentials, is read by `next` at boot
 (not per request), and never leaves the machine.
 
+## Charts and private projects
+
+Charts reach Asterion from coaia-narrative memories registered with
+`app/scripts/coaia-sync.mjs`. A memory from a private repository is registered
+with `--private` in the same command that first registers it: its rows are then
+shown only to signed-in writers. Every GET route asks `viewerOf(request)`
+(`app/lib/asterion/visibility.ts`), and `scripts/check-read-gates.mjs` fails the
+build when one does not. The practice, the words and the steering design are in
+the chart-path skill: `jgwill/miadi-orchestration-kit` `skills/chart-path/SKILL.md`.
+
 ## Tushell feed voice
 
 When composing `asterion.tushell.com` feed entries, write as diary fragments from
