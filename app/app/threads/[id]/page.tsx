@@ -57,7 +57,7 @@ export default function ThreadDetailPage({ params }: { params: Promise<{ id: str
             Threads
           </Link>
           <span className="text-muted-foreground">/</span>
-          <span className="truncate">{thread.name}</span>
+          <span className="min-w-0 truncate">{thread.name}</span>
         </div>
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           {thread.thread_type && <span className="rounded-full bg-muted px-2 py-0.5">{thread.thread_type}</span>}

@@ -38,12 +38,12 @@ export default function ThreadsPage() {
           </p>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {threads.map(thread => (
-            <Link key={thread.id} href={`/threads/${thread.id}`} className="block">
+            <Link key={thread.id} href={`/threads/${thread.id}`} className="block min-w-0">
             <Card className="h-full transition-colors hover:bg-muted/50">
               <CardHeader>
-                <div className="flex items-start justify-between gap-2">
+                <div className="flex min-w-0 items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
                     <CardTitle className="text-base truncate">{thread.name}</CardTitle>
                     {thread.thread_type && (

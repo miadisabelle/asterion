@@ -92,13 +92,13 @@ export function AppShell({ children, title, actions }: AppShellProps) {
 
         {/* Main Content Area */}
         <main className={cn(
-          'flex-1 flex flex-col min-h-screen',
+          'flex-1 flex flex-col min-h-screen min-w-0',
           !isMobile && 'pl-64'
         )}>
           {/* Top Header Bar */}
           <header className="sticky top-0 z-40 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
             <div className="flex h-14 items-center justify-between px-4 md:px-6">
-              <div className="flex items-center gap-3">
+              <div className="flex min-w-0 items-center gap-3">
                 {isMobile && (
                   <Button
                     variant="ghost"
@@ -114,7 +114,7 @@ export function AppShell({ children, title, actions }: AppShellProps) {
                   <h1 className="text-base md:text-lg font-semibold truncate">{title}</h1>
                 )}
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex shrink-0 items-center gap-3">
                 {actions && (
                   <div className="flex items-center gap-2">
                     {actions}
@@ -126,7 +126,7 @@ export function AppShell({ children, title, actions }: AppShellProps) {
           </header>
 
           {/* Page Content */}
-          <div className="flex-1 p-4 md:p-6">
+          <div className="flex-1 min-w-0 p-4 md:p-6">
             {children}
           </div>
         </main>
