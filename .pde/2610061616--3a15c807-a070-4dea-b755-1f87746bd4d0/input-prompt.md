@@ -1,0 +1,4 @@
+'/workspace/repos/miadisabelle/asterion/' has a section 'Layers' that we can use when we create new structural tension chart, I want you to review them in relation to our @foundations/ (jgwill/Miadi foundations/) which might have looked at that before and suggest definition upgrades, renaming or new ones as well as Asterion's documentation upgrades (as I see a 'Docs' when I am into the platform)
+* Useful info: It is planned that we absorb the prototype Asterion into reusable packages @packages/ and also into @app/ (of jgwill/Miadi) which will complement what we have... any github issues of jgwill/Miadi that can help you in what you'll propose, use them
+
+You'll fill your proposal upgrades into repo 'miadisabelle/asterion' and group them by segment (subissues of a main issue that would help us navigate to all in surface)
