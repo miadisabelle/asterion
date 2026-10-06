@@ -5,6 +5,7 @@ import { publicProject } from './coaia-projection.mjs'
 import { PRIVATE_PROJECT_IDS, PRIVATE_SOURCES, PRIVATE_TENSION_IDS, PRIVATE_THREAD_IDS, seesPrivate, type Viewer } from './visibility'
 import type { 
   Project, 
+  ProjectSeat,
   CreateProjectInput,
   ProjectTension,
   Layer,
@@ -83,6 +84,26 @@ export async function createProject(input: CreateProjectInput): Promise<Project>
   
   await invalidateCache('projects:*')
   return result[0] as Project
+}
+
+// A tmux session name (Miadi's seats are tmux sessions) and a host name.
+export const SEAT_SESSION_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:@-]{0,127}$/
+export const SEAT_HOST_PATTERN = /^[A-Za-z0-9][A-Za-z0-9.-]{0,62}$/
+
+/** Name the session that keeps a project's charts, or clear it with null. */
+export async function setProjectSeat(id: string, seat: ProjectSeat | null): Promise<Project | null> {
+  const result = await sql`
+    UPDATE asterion.projects
+       SET metadata = CASE
+             WHEN ${seat === null} THEN COALESCE(metadata, '{}'::jsonb) - 'seat'
+             ELSE jsonb_set(COALESCE(metadata, '{}'::jsonb), '{seat}', ${JSON.stringify(seat)}::jsonb)
+           END,
+           updated_at = NOW()
+     WHERE id = ${id}
+     RETURNING *
+  `
+  await invalidateCache('projects:*')
+  return result[0] ? (publicProject(result[0]) as Project) : null
 }
 
 export async function addTensionToProject(

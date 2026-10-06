@@ -77,6 +77,20 @@ export interface ActionStep {
 }
 
 // Projects - Orchestration lenses across repos
+/**
+ * The agent session that keeps a project's charts: where a steer made on Asterion
+ * is meant to go. The same shape as a seat in Miadi's config/stc-steering.json
+ * (a tmux session), plus the host it runs on. Kept in projects.metadata.seat,
+ * which the registry sync never touches.
+ */
+export interface ProjectSeat {
+  kind: 'tmux'
+  session: string
+  host: string | null
+  set_by: string
+  set_at: string
+}
+
 export interface Project {
   id: string
   name: string
