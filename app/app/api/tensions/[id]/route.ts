@@ -13,6 +13,7 @@ import {
   type UpdateTensionInput
 } from '@/lib/asterion'
 import { requireWriter } from '@/lib/asterion/writer'
+import { refuseProjected } from '@/lib/asterion/projected'
 import { viewerOf } from '@/lib/asterion/visibility'
 
 export async function GET(
@@ -58,6 +59,8 @@ export async function PATCH(
         { status: 404 }
       )
     }
+    const projected = refuseProjected(current, 'chart')
+    if (projected) return projected
 
     // Validate phase transition if changing phase
     if (body.phase && body.phase !== current.phase) {
@@ -128,6 +131,8 @@ export async function DELETE(
         { status: 404 }
       )
     }
+    const projected = refuseProjected(tension, 'chart')
+    if (projected) return projected
 
     // Log before deletion
     await logEvent({

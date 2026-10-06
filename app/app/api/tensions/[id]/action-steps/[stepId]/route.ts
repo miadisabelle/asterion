@@ -3,6 +3,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { updateActionStepStatus, logEvent } from '@/lib/asterion'
 import { requireWriter } from '@/lib/asterion/writer'
+import { refuseProjected, stepSource } from '@/lib/asterion/projected'
 
 export async function PATCH(
   request: NextRequest,
@@ -12,6 +13,8 @@ export async function PATCH(
   if (denied) return denied
   try {
     const { id: tensionId, stepId } = await params
+    const projected = refuseProjected(await stepSource(stepId, tensionId), 'step')
+    if (projected) return projected
     const body = await request.json() as { status: string }
     
     if (!body.status) {

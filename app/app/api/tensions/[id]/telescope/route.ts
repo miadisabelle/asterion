@@ -7,6 +7,7 @@ import {
   type CreateTensionInput
 } from '@/lib/asterion'
 import { requireWriter } from '@/lib/asterion/writer'
+import { refuseProjected, stepSource } from '@/lib/asterion/projected'
 
 export async function POST(
   request: NextRequest,
@@ -27,6 +28,9 @@ export async function POST(
         { status: 400 }
       )
     }
+    // A projected step's telescoping is the chart memory's: the sync resets it each pass.
+    const projected = refuseProjected(await stepSource(body.action_step_id, tensionId), 'step')
+    if (projected) return projected
 
     const tension = await telescopeActionStep(body.action_step_id, body.tension)
     

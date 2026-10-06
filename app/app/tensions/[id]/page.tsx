@@ -152,7 +152,8 @@ export default function TensionDetailPage({ params }: { params: Promise<{ id: st
     <Select 
       value={tension.phase} 
       onValueChange={(v) => handlePhaseChange(v as Phase)}
-      disabled={isUpdating}
+      // A projected chart's phase is its memory's: the next sync would undo a change here.
+      disabled={isUpdating || Boolean(tension.external_source)}
     >
       <SelectTrigger className="w-[140px] md:w-[160px] text-base">
         <SelectValue placeholder="Phase" />
@@ -189,6 +190,12 @@ export default function TensionDetailPage({ params }: { params: Promise<{ id: st
           githubRepo={tension.github_repo}
           githubIssue={tension.github_issue_number}
         />
+        {tension.external_source && (
+          <p className="w-full text-xs text-muted-foreground">
+            Kept in a chart memory: its outcome, phase and steps change where it is kept, and return here at the next sync.
+            A step added here stays on the site{tension.github_issue_number ? ' and opens a sub-issue' : ''}.
+          </p>
+        )}
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -308,6 +315,8 @@ export default function TensionDetailPage({ params }: { params: Promise<{ id: st
                           onCheckedChange={(checked) => 
                             handleStepStatusChange(step.id, checked ? 'completed' : 'pending')
                           }
+                          disabled={Boolean(step.external_source)}
+                          title={step.external_source ? 'Completed where the chart is kept: through its agent, or on its GitHub issue' : undefined}
                           className="mt-0.5 h-5 w-5"
                         />
                         <div className="flex-1 min-w-0">

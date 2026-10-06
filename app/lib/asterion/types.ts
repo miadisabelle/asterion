@@ -69,6 +69,9 @@ export interface ActionStep {
   sort_order: number
   telescoped_to_tension_id: string | null
   metadata: Record<string, unknown>
+  // Set when the step is projected from a chart memory (see lib/asterion/projected.ts)
+  external_id?: string | null
+  external_source?: string | null
   created_at: string
   updated_at: string
   // Relations
