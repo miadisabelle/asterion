@@ -1,0 +1,49 @@
+{
+  "_note": "A synthetic circle for the circle projection tests (miadisabelle/asterion#11). No real person, no real words.",
+  "wheel": "http://wheel.test",
+  "circle": {
+    "id": "circle:1000000000000:fixt01",
+    "type": "circle",
+    "name": "Fixture circle",
+    "direction": "east",
+    "description": "",
+    "metadata": {
+      "kind": "circle",
+      "intention": "Hear what the week taught us",
+      "facilitator_id": "node:human:ada",
+      "circle_type": "ongoing",
+      "is_public": false,
+      "active": true,
+      "container": { "private_by_default": true, "explicit_sharing_consent": true, "hide_engagement_metrics": true }
+    },
+    "created_at": "2026-09-30T08:00:00.000Z",
+    "updated_at": "2026-09-30T08:00:00.000Z"
+  },
+  "edges": [
+    { "id": "e1", "from_id": "node:human:ada", "to_id": "circle:1000000000000:fixt01", "relationship_type": "member_of", "obligations": ["facilitate"], "created_at": "2026-09-30T08:00:00.000Z" },
+    { "id": "e2", "from_id": "node:human:bo", "to_id": "circle:1000000000000:fixt01", "relationship_type": "member_of", "obligations": [], "created_at": "2026-09-30T08:01:00.000Z" },
+    { "id": "e3", "from_id": "node:human:cy", "to_id": "circle:1000000000000:fixt01", "relationship_type": "member_of", "obligations": [], "created_at": "2026-09-30T08:02:00.000Z" }
+  ],
+  "people": [
+    { "id": "node:human:ada", "type": "human", "name": "Ada", "metadata": { "kind": "person", "role": "ceremony_facilitator" }, "created_at": "2026-09-01T00:00:00.000Z", "updated_at": "2026-09-01T00:00:00.000Z" },
+    { "id": "node:human:bo", "type": "human", "name": "Bo", "metadata": { "kind": "person", "role": "participant" }, "created_at": "2026-09-01T00:00:00.000Z", "updated_at": "2026-09-01T00:00:00.000Z" },
+    { "id": "node:human:cy", "type": "human", "name": "Cy", "metadata": { "kind": "person", "role": "participant" }, "created_at": "2026-09-01T00:00:00.000Z", "updated_at": "2026-09-01T00:00:00.000Z" }
+  ],
+  "ceremonies": [
+    { "id": "ceremony:fixt-c1", "type": "talking_circle", "direction": "east", "participants": ["node:human:ada"], "medicines_used": [], "intentions": ["Name what the week taught us"], "timestamp": "2026-10-01T10:00:00.000Z", "circle_id": "circle:1000000000000:fixt01", "episode_path": "2026-10-01-episode-900-fixture" },
+    { "id": "ceremony:fixt-c1-close", "type": "closing", "direction": "east", "participants": ["node:human:ada"], "medicines_used": [], "intentions": [], "timestamp": "2026-10-01T11:00:00.000Z", "circle_id": "circle:1000000000000:fixt01", "closes": "ceremony:fixt-c1" },
+    { "id": "ceremony:fixt-c2", "type": "talking_circle", "direction": "south", "participants": ["node:human:ada"], "medicines_used": [], "intentions": [], "timestamp": "2026-10-03T09:00:00.000Z", "circle_id": "circle:1000000000000:fixt01", "subject_id": "review:00000000-0000-0000-0000-000000000000" }
+  ],
+  "turns": [
+    { "id": "beat:fixt-t3", "direction": "east", "title": "Cy speaks", "description": "Words Cy has not shared", "prose": "Words Cy has not shared", "ceremonies": ["ceremony:fixt-c1"], "learnings": [], "timestamp": "2026-10-01T10:20:00.000Z", "act": 1, "relations_honored": ["node:human:cy"], "speaker": "node:human:cy" },
+    { "id": "beat:fixt-t1", "direction": "east", "title": "Ada opens", "description": "We begin by listening.", "prose": "We begin by listening.\nEach of us says one thing.", "ceremonies": ["ceremony:fixt-c1"], "learnings": ["Listening first slows us down"], "timestamp": "2026-10-01T10:05:00.000Z", "act": 1, "relations_honored": ["node:human:ada"], "speaker": "node:human:ada", "witnesses": ["node:human:bo", "node:human:cy"] },
+    { "id": "beat:fixt-t2", "direction": "east", "title": "Bo speaks", "description": "The tests caught it.", "prose": "The tests caught it before anyone saw it.", "ceremonies": ["ceremony:fixt-c1"], "learnings": [], "timestamp": "2026-10-01T10:10:00.000Z", "act": 1, "relations_honored": ["node:human:bo"], "speaker": "node:human:bo", "witnesses": ["node:human:ada"] },
+    { "id": "beat:fixt-t4", "direction": "south", "title": "Bo speaks", "description": "A second gathering.", "prose": "A second gathering, about the review.", "ceremonies": ["ceremony:fixt-c2"], "learnings": [], "timestamp": "2026-10-03T09:05:00.000Z", "act": 1, "relations_honored": ["node:human:bo"], "speaker": "node:human:bo" },
+    { "id": "beat:fixt-t5", "direction": "south", "title": "An unnamed turn", "description": "Words with no speaker", "ceremonies": ["ceremony:fixt-c2"], "learnings": [], "timestamp": "2026-10-03T09:10:00.000Z", "act": 1, "relations_honored": [] }
+  ],
+  "consents": [
+    { "id": "consent:fixt-ada", "type": "knowledge", "name": "Consent: Ada", "metadata": { "is_consent_record": true, "full_record": { "id": "consent:fixt-ada", "grantor": "node:human:ada", "grantee": "asterion", "scope": { "description": "Asterion may hold this circle and my turns in it", "dataTypes": ["circle"], "purposes": ["asterion-projection"], "restrictions": [] }, "state": "active", "ceremonies": [], "history": [], "communityLevel": false, "dependentRelations": ["circle:1000000000000:fixt01"], "ocapFlags": { "compliant": false } } } },
+    { "id": "consent:fixt-bo", "type": "knowledge", "name": "Consent: Bo", "metadata": { "is_consent_record": true, "full_record": { "id": "consent:fixt-bo", "grantor": "node:human:bo", "grantee": "asterion", "scope": { "description": "Asterion may hold my turns in this circle", "dataTypes": ["circle"], "purposes": ["asterion-projection"], "restrictions": [] }, "state": "granted", "ceremonies": [], "history": [], "communityLevel": false, "dependentRelations": ["circle:1000000000000:fixt01"], "ocapFlags": { "compliant": false } } } },
+    { "id": "consent:fixt-cy", "type": "knowledge", "name": "Consent: Cy", "metadata": { "is_consent_record": true, "full_record": { "id": "consent:fixt-cy", "grantor": "node:human:cy", "grantee": "asterion", "scope": { "description": "Withdrawn", "dataTypes": ["circle"], "purposes": ["asterion-projection"], "restrictions": [] }, "state": "withdrawn", "ceremonies": [], "history": [], "communityLevel": false, "dependentRelations": ["circle:1000000000000:fixt01"], "ocapFlags": { "compliant": false } } } }
+  ]
+}

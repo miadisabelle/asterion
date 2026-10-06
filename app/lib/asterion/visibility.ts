@@ -6,6 +6,9 @@
 // carry them takes a Viewer, and anything that is not a writer's viewer hides
 // them: a read that forgets to ask shows less, never more.
 //
+// A circle projected by `scripts/circle-sync.mjs` is private when the circle is
+// private on the wheel. Its ceremony threads and turns hide the same way.
+//
 // scripts/check-read-gates.mjs fails the build when a GET route never asks.
 
 import { currentWriter } from './writer'
@@ -28,9 +31,9 @@ export const seesPrivate = (viewer?: Viewer | null): boolean => viewer?.includeP
 
 export const PRIVATE_PROJECT_IDS = `SELECT id FROM asterion.projects WHERE metadata->>'visibility' = 'private'`
 
-/** external_source values the rows of private coaia-narrative projects carry. */
-export const PRIVATE_SOURCES = `SELECT 'coaia-narrative:' || external_id FROM asterion.projects
-  WHERE external_source = 'coaia-narrative' AND external_id IS NOT NULL AND metadata->>'visibility' = 'private'`
+/** external_source values the rows of private projects carry: coaia-narrative memories and medicine-wheel circles. */
+export const PRIVATE_SOURCES = `SELECT external_source || ':' || external_id FROM asterion.projects
+  WHERE external_source IN ('coaia-narrative', 'medicine-wheel') AND external_id IS NOT NULL AND metadata->>'visibility' = 'private'`
 
 /** Charts of a private project: projected from its file, placed in it, or nested under one of those. */
 export const PRIVATE_TENSION_IDS = `WITH RECURSIVE hidden(id) AS (

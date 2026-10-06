@@ -11,10 +11,16 @@
     "db:schema": "node scripts/db-provision.mjs --schema",
     "db:verify": "node scripts/db-provision.mjs --verify",
     "coaia:list": "node scripts/coaia-sync.mjs list",
-    "coaia:sync": "node scripts/coaia-sync.mjs sync"
+    "coaia:sync": "node scripts/coaia-sync.mjs sync",
+    "circles:list": "node scripts/circle-sync.mjs list",
+    "circles:sync": "node scripts/circle-sync.mjs sync",
+    "test": "node --test tests/*.test.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
+    "@medicine-wheel/client": "^0.17.4",
+    "@medicine-wheel/community-identity": "^0.17.4",
+    "@medicine-wheel/consent-lifecycle": "^0.17.4",
     "@miadi/github-actions": "^0.1.0",
     "@neondatabase/serverless": "^1.1.0",
     "@radix-ui/react-accordion": "1.2.12",
