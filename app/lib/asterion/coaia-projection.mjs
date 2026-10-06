@@ -39,7 +39,8 @@ export const SYSTEM = 'coaia-narrative'
 // 4: parents from metadata.parentChart (what coaia-narrative writes), and a
 // telescoped child chart is work of its parent (contract getWork).
 // 5: a flat step and the child it opened into are one step (contract childChartId).
-export const MAPPER_VERSION = 5
+// 6: a beat's created_at is when it happened (metadata.timestamp), not the pass (miadisabelle/asterion#20 A38).
+export const MAPPER_VERSION = 6
 export const KEY_PATTERN = /^[a-z0-9][a-z0-9._-]{0,63}$/
 export const sourceFor = (key) => `${SYSTEM}:${key}`
 
@@ -109,6 +110,8 @@ const scrub = (v) =>
       : v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).map(([k, x]) => [scrub(k), scrub(x)]))
         : v
 const asText = (v) => (typeof v === 'string' && v.trim() ? v.trim() : null)
+/** An ISO time, or null for anything that does not parse, so one bad value never fails a pass. */
+const asTime = (v) => (typeof v === 'string' && !Number.isNaN(Date.parse(v)) ? new Date(Date.parse(v)).toISOString() : null)
 
 // metadata.github, plus the two legacy shapes coaia-narrative still accepts.
 function githubOf(meta = {}) {
@@ -232,6 +235,7 @@ export function planProjection(input, { file = null } = {}) {
         beat_type: asText(b.metadata.type_dramatic) ?? 'beat',
         title: firstLine(text(b), 200) || b.name,
         content: asText(b.metadata.narrative?.prose) ?? text(b),
+        happened_at: asTime(b.metadata.timestamp),
         metadata: b.metadata,
       })),
     }
@@ -546,14 +550,17 @@ export async function applyProjection(sql, plan, { project, actor, whole = true,
   for (const c of plan.charts) {
     for (const b of c.beats) {
       await sql.query(
+        // created_at is when the beat happened, so a thread reads in that order.
+        // A beat that carries no time keeps the time of its first pass.
         `INSERT INTO asterion.narrative_beats
-           (external_id, external_source, tension_id, beat_type, title, content, metadata)
-         VALUES ($1,$2,$3,$4,$5,$6,$7)
+           (external_id, external_source, tension_id, beat_type, title, content, metadata, created_at)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,COALESCE($8::timestamptz, now()))
          ON CONFLICT (external_id, external_source) DO UPDATE SET
            tension_id = EXCLUDED.tension_id, beat_type = EXCLUDED.beat_type,
-           title = EXCLUDED.title, content = EXCLUDED.content, metadata = EXCLUDED.metadata`,
+           title = EXCLUDED.title, content = EXCLUDED.content, metadata = EXCLUDED.metadata,
+           created_at = COALESCE($8::timestamptz, asterion.narrative_beats.created_at)`,
         [b.name, source, tensionId.get(c.chartId), b.beat_type, b.title, b.content,
-          JSON.stringify({ ...b.metadata, source: { system: SYSTEM, key, entity: b.name } })]
+          JSON.stringify({ ...b.metadata, source: { system: SYSTEM, key, entity: b.name } }), b.happened_at]
       )
     }
   }
