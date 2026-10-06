@@ -20,9 +20,9 @@ const without = (snapshot, consentId) => ({ ...snapshot, consents: snapshot.cons
 
 const record = (over = {}) => ({
   id: 'consent:x', grantor: 'node:human:ada', grantee: 'asterion',
-  scope: { description: '', dataTypes: ['circle'], purposes: ['asterion-projection'], restrictions: [] },
+  scope: { description: '', dataTypes: [CIRCLE], purposes: ['asterion-projection'], restrictions: [] },
   state: 'active', ceremonies: [], history: [], communityLevel: false,
-  dependentRelations: [CIRCLE], ocapFlags: { compliant: false }, ...over,
+  dependentRelations: [], ocapFlags: { compliant: false }, ...over,
 })
 
 // ---------- consent ----------
@@ -38,11 +38,16 @@ test('a consent holds only for its grantor, for Asterion, for this circle, in sc
   assert.equal(consentHolds(record({ expiresAt: '2027-01-01T00:00:00.000Z' }), ada, CIRCLE, NOW), true)
   assert.equal(consentHolds(record(), 'node:human:bo', CIRCLE, NOW), false, 'someone else cannot consent for Ada')
   assert.equal(consentHolds(record({ grantee: 'honcho' }), ada, CIRCLE, NOW), false)
-  assert.equal(consentHolds(record({ dependentRelations: ['circle:other'] }), ada, CIRCLE, NOW), false)
-  assert.equal(consentHolds(record({ dependentRelations: [] }), ada, CIRCLE, NOW), false)
-  assert.equal(consentHolds(record({ scope: { description: '', dataTypes: ['diary'], purposes: ['asterion-projection'], restrictions: [] } }), ada, CIRCLE, NOW), false)
-  assert.equal(consentHolds(record({ scope: { description: '', dataTypes: ['circle'], purposes: ['research'], restrictions: [] } }), ada, CIRCLE, NOW), false)
+  assert.equal(consentHolds(record({ scope: { description: '', dataTypes: ['circle:other'], purposes: ['asterion-projection'], restrictions: [] } }), ada, CIRCLE, NOW), false, 'another circle')
+  assert.equal(consentHolds(record({ scope: { description: '', dataTypes: ['*'], purposes: ['asterion-projection'], restrictions: [] } }), ada, CIRCLE, NOW), true, 'every circle')
+  assert.equal(consentHolds(record({ scope: { description: '', dataTypes: [CIRCLE], purposes: ['research'], restrictions: [] } }), ada, CIRCLE, NOW), false)
   assert.equal(consentHolds(record({ scope: { description: '', dataTypes: ['*'], purposes: ['*'], restrictions: ['no asterion-projection'] } }), ada, CIRCLE, NOW), false)
+})
+
+test('a record shaped as mw_consent_grant writes it counts', () => {
+  // @medicine-wheel/mcp mw_consent_grant: scope from dataTypes and purposes, dependentRelations empty, state set by grantConsent.
+  const granted = record({ state: 'granted', dependentRelations: [], ocapFlags: { compliant: false } })
+  assert.equal(consentHolds(granted, 'node:human:ada', CIRCLE, NOW), true)
 })
 
 test('consenting people are read from the consent nodes on the wheel', () => {

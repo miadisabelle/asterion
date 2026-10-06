@@ -19,8 +19,8 @@
 // someone who has not said yes. A yes is a consent record on the wheel (a
 // knowledge node with metadata.is_consent_record, as @medicine-wheel/mcp's
 // mw_consent_grant writes it) whose grantor is the person, whose grantee is
-// 'asterion', whose scope covers data type 'circle' for purpose
-// 'asterion-projection', and whose dependentRelations name the circle. The
+// 'asterion', and whose scope covers the circle's id as its data type ('*' for
+// every circle) for purpose 'asterion-projection'. The
 // facilitator's yes carries the circle and its ceremonies. Each speaker's yes
 // carries their own turns. A witness is named only with their own yes. This
 // module never writes a consent record.
@@ -43,8 +43,8 @@ export const MAPPER_VERSION = 1
 export const CIRCLE_ID_PATTERN = /^circle:[A-Za-z0-9:_-]{1,120}$/
 export const sourceFor = (circleId) => `${SYSTEM}:${circleId}`
 
-/** What a consent record must cover for Asterion to hold a person's words. */
-export const CONSENT = Object.freeze({ grantee: 'asterion', dataType: 'circle', purpose: 'asterion-projection' })
+/** What a consent record must cover for Asterion to hold a person's words. Its data type is the circle's id. */
+export const CONSENT = Object.freeze({ grantee: 'asterion', purpose: 'asterion-projection' })
 
 /** Cache patterns (under asterion:cache:) that a projection makes stale. */
 export const CACHE_PATTERNS = ['projects:*', 'project:*']
@@ -62,9 +62,8 @@ export function consentHolds(record, personId, circleId, now = Date.now()) {
   if (!record || record.grantor !== personId || record.grantee !== CONSENT.grantee) return false
   if (!STANDING.has(record.state)) return false
   if (record.expiresAt && !(Date.parse(record.expiresAt) > now)) return false
-  if (!Array.isArray(record.dependentRelations) || !record.dependentRelations.includes(circleId)) return false
   const scope = { dataTypes: [], purposes: [], restrictions: [], ...(record.scope ?? {}) }
-  return scopeIncludes(scope, { dataType: CONSENT.dataType, purpose: CONSENT.purpose }).withinScope
+  return scopeIncludes(scope, { dataType: circleId, purpose: CONSENT.purpose }).withinScope
 }
 
 /** The people whose consent for this circle stands, from the wheel's consent nodes. */

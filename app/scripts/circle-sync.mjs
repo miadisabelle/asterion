@@ -55,7 +55,7 @@ function print(plan) {
   console.log(`\nheld for consent`)
   for (const h of plan.held) console.log(`  ${h.kind.padEnd(8)} ${h.wheel_id}  ${h.reason}`)
   if (!plan.held.length) console.log('  nothing')
-  console.log(`\nA consent counts when its grantor is the person, grantee '${CONSENT.grantee}', scope '${CONSENT.dataType}' for '${CONSENT.purpose}', and dependentRelations name ${plan.circleId}.`)
+  console.log(`\nA consent counts when its grantor is the person, its grantee '${CONSENT.grantee}', and its scope covers data type ${plan.circleId} for purpose '${CONSENT.purpose}'.`)
 }
 
 async function planCmd() {
