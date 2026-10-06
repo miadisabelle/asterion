@@ -5,7 +5,7 @@
 // projects it with the same mapper the registry sync uses
 // (lib/asterion/coaia-projection.mjs). Sending the same file twice writes nothing.
 //
-//   Authorization: Bearer $ASTERION_INGEST_TOKEN
+//   Authorization: Bearer <the token of the host posting>
 //   { "project": "<key>", "jsonl": "<the whole file>" }      or
 //   { "project": "<key>", "records": [ …every record of the file… ] }
 //   optional: "file" (the file's name), "actor" (who is writing)
@@ -14,8 +14,11 @@
 // file, one writer, posted whole. A project with registered files is fed by the
 // registry sync alone, so the two transports never write the same project.
 // Registering is scripts/coaia-sync.mjs register <key> --writer.
+//
+// One token per host (ASTERION_INGEST_TOKENS, lib/asterion/ingest-tokens.mjs):
+// the token names the host, the host is what the event log records, and removing
+// one pair cuts that machine off without touching the others.
 
-import { timingSafeEqual } from 'node:crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/asterion/db'
 import { invalidateCache } from '@/lib/asterion/redis'
@@ -29,27 +32,21 @@ import {
   registeredFiles,
   sourceFor,
 } from '@/lib/asterion/coaia-projection.mjs'
+import { actorFor, hostForToken, parseIngestTokens } from '@/lib/asterion/ingest-tokens.mjs'
 
 export const runtime = 'nodejs'
 export const maxDuration = 60
 
 const MAX_BYTES = 16 * 1024 * 1024
 
-function authorized(request: NextRequest, expected: string): boolean {
-  const header = request.headers.get('authorization') ?? ''
-  if (!/^Bearer\s+/i.test(header)) return false
-  const a = Buffer.from(header.replace(/^Bearer\s+/i, ''))
-  const b = Buffer.from(expected)
-  return a.length === b.length && timingSafeEqual(a, b)
-}
-
 export async function POST(request: NextRequest) {
-  const expected = process.env.ASTERION_INGEST_TOKEN
-  if (!expected) {
+  const { accepted } = parseIngestTokens(process.env)
+  if (!accepted.length) {
     return NextResponse.json({ error: 'Ingest is not enabled here.' }, { status: 503 })
   }
-  if (!authorized(request, expected)) {
-    return NextResponse.json({ error: 'Send Authorization: Bearer <ingest token>.' }, { status: 401 })
+  const host = hostForToken(request.headers.get('authorization'), accepted)
+  if (!host) {
+    return NextResponse.json({ error: "Send Authorization: Bearer <this host's ingest token>." }, { status: 401 })
   }
   const length = Number(request.headers.get('content-length') ?? 0)
   if (length > MAX_BYTES) {
@@ -99,9 +96,9 @@ export async function POST(request: NextRequest) {
       )
     }
     const file = typeof input.file === 'string' ? input.file.slice(0, 200) : null
-    const actorId = typeof input.actor === 'string' && input.actor.trim() ? input.actor.trim().slice(0, 120) : 'coaia-narrative'
+    const actor = actorFor(host, typeof input.actor === 'string' ? input.actor : null)
     const plan = planProjection(records, { file })
-    const result = await applyProjection(sql, plan, { project, actor: { type: 'writer', id: actorId } })
+    const result = await applyProjection(sql, plan, { project, actor })
     if (!result.unchanged) {
       await Promise.all(CACHE_PATTERNS.map((p: string) => invalidateCache(p).catch(() => undefined)))
     }
@@ -109,6 +106,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       ok: true,
       project: { key, name: project.name, id: project.id },
+      host,
+      actor: actor.id,
       external_source: sourceFor(key),
       unchanged: result.unchanged,
       counts: plan.counts,

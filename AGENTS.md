@@ -20,7 +20,11 @@ themselves come from `/opt/gaia/linux_migration/22-asterion-tailscale-autostart.
 which is idempotent.
 
 `app/.env.local` carries the Neon/Redis credentials, is read by `next` at boot
-(not per request), and never leaves the machine.
+(not per request), and never leaves the machine. It also carries
+`ASTERION_INGEST_TOKENS`, one `host=token` pair per machine allowed through the
+ingest door: the token names the host, the host is what the event log records for
+each arrival, and cutting one machine off is removing its pair and restarting.
+The older single `ASTERION_INGEST_TOKEN` still works and reports as `unnamed`.
 
 ## Schema changes
 
