@@ -199,6 +199,15 @@ export interface NarrativeThread {
   tensions?: ThreadTension[]
 }
 
+/** A chart as a thread lists it: enough to name it and link to it. */
+export interface ThreadChart {
+  id: string
+  title: string
+  status: string | null
+  phase: string | null
+  sort_order: number
+}
+
 export interface ThreadTension {
   thread_id: string
   tension_id: string

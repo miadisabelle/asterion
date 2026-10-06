@@ -79,6 +79,7 @@ export {
   getNarrativeThreads,
   getNarrativeThread,
   getThreadBeats,
+  getThreadCharts,
   createNarrativeThread,
   addTensionToThread,
   createNarrativeBeat,

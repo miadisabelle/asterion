@@ -15,6 +15,7 @@ import type {
   Observation,
   NarrativeThread,
   NarrativeBeat,
+  ThreadChart,
   MMOTEvaluation,
   CreateMMOTEvaluationInput,
   AsterionEvent,
@@ -359,12 +360,32 @@ export async function getNarrativeThread(id: string, viewer: Viewer): Promise<Na
   return (result[0] as NarrativeThread) ?? null
 }
 
-/** The beats a thread holds itself (a ceremony's turns), in the order they were spoken. */
-export async function getThreadBeats(threadId: string, viewer: Viewer): Promise<NarrativeBeat[]> {
+/** The charts a thread holds (a chart family's root and its telescoped charts), in the thread's order. */
+export async function getThreadCharts(threadId: string, viewer: Viewer): Promise<ThreadChart[]> {
   const result = await sql.query(
-    `SELECT * FROM asterion.narrative_beats
-      WHERE thread_id = $1 ${seesPrivate(viewer) ? '' : `AND thread_id NOT IN (${PRIVATE_THREAD_IDS})`}
-      ORDER BY created_at, id`,
+    `SELECT t.id, t.title, t.status, t.phase, tt.sort_order
+       FROM asterion.thread_tensions tt JOIN asterion.tensions t ON t.id = tt.tension_id
+      WHERE tt.thread_id = $1 ${seesPrivate(viewer) ? '' : `AND t.id NOT IN (${PRIVATE_TENSION_IDS})`}
+      ORDER BY tt.sort_order, t.created_at`,
+    [threadId]
+  )
+  return result as ThreadChart[]
+}
+
+/**
+ * The beats a reader follows in a thread, in the order they happened: the
+ * thread's own (a ceremony's turns) and those of the charts it holds.
+ */
+export async function getThreadBeats(threadId: string, viewer: Viewer): Promise<NarrativeBeat[]> {
+  const hidden = seesPrivate(viewer)
+    ? ''
+    : `AND (b.thread_id IS NULL OR b.thread_id NOT IN (${PRIVATE_THREAD_IDS}))
+       AND (b.tension_id IS NULL OR b.tension_id NOT IN (${PRIVATE_TENSION_IDS}))`
+  const result = await sql.query(
+    `SELECT b.* FROM asterion.narrative_beats b
+      WHERE (b.thread_id = $1 OR b.tension_id IN (SELECT tension_id FROM asterion.thread_tensions WHERE thread_id = $1))
+      ${hidden}
+      ORDER BY b.created_at, b.id`,
     [threadId]
   )
   return result as NarrativeBeat[]

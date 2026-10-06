@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useThread } from '@/lib/asterion/hooks'
 import { AppShell } from '@/components/asterion/app-shell'
 import { ProvenanceBadges } from '@/components/asterion/provenance'
-import { ThreadTurns, spokenAt, type Turn } from '@/components/asterion/thread-turns'
+import { ThreadBeats, emptyLine, spokenAt, type Beat } from '@/components/asterion/thread-beats'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { AlertCircle, ChevronLeft, ExternalLink } from 'lucide-react'
@@ -45,7 +45,9 @@ export default function ThreadDetailPage({ params }: { params: Promise<{ id: str
   const meta = (thread.metadata ?? {}) as Record<string, unknown>
   const openedAt = typeof meta.opened_at === 'string' ? meta.opened_at : null
   const closedAt = typeof meta.closed_at === 'string' ? meta.closed_at : null
-  const turns = (data?.beats ?? []) as unknown as Turn[]
+  const beats = (data?.beats ?? []) as unknown as Beat[]
+  const charts = data?.charts ?? []
+  const chartTitles = Object.fromEntries(charts.map((c) => [c.id, c.title]))
 
   return (
     <AppShell title={thread.name}>
@@ -79,7 +81,22 @@ export default function ThreadDetailPage({ params }: { params: Promise<{ id: str
           </a>
         )}
       </div>
-      <ThreadTurns turns={turns} />
+      {charts.length > 0 && (
+        <section className="mb-6" aria-label="Charts">
+          <h2 className="mb-2 text-sm font-medium text-muted-foreground">Charts this thread follows</h2>
+          <ul className="space-y-1 text-sm">
+            {charts.map((c) => (
+              <li key={c.id} className="flex flex-wrap items-baseline gap-2">
+                <Link href={`/tensions/${c.id}`} className="min-w-0 break-words underline-offset-4 hover:underline">
+                  {c.title}
+                </Link>
+                {c.status && <span className="text-xs text-muted-foreground">{c.status}</span>}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+      <ThreadBeats beats={beats} charts={chartTitles} empty={emptyLine(thread.thread_type)} />
     </AppShell>
   )
 }

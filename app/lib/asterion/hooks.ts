@@ -1,7 +1,7 @@
 'use client'
 
 import useSWR from 'swr'
-import type { Tension, Phase, Layer, Project, NarrativeThread, NarrativeBeat } from '@/lib/asterion/types'
+import type { Tension, Phase, Layer, Project, NarrativeThread, NarrativeBeat, ThreadChart } from '@/lib/asterion/types'
 
 const fetcher = (url: string) => fetch(url).then(res => res.json())
 
@@ -103,6 +103,7 @@ export function useThreads() {
 export function useThread(id: string | null) {
   return useSWR<{
     thread: NarrativeThread
+    charts: ThreadChart[]
     beats: NarrativeBeat[]
     miadi_url: string | null
   }>(id ? `/api/threads/${id}` : null, fetcher)
