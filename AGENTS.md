@@ -22,6 +22,13 @@ which is idempotent.
 `app/.env.local` carries the Neon/Redis credentials, is read by `next` at boot
 (not per request), and never leaves the machine.
 
+## Schema changes
+
+A change to the live database is a numbered file, `app/db/migrations/NNN-what-it-does.sql`,
+written so that replaying it is a no-op. Fetch origin first and take the next free number.
+Apply it alone with `node scripts/db-provision.mjs --migration NNN` from `app/`, and never
+edit another lane's migration. A fresh database gets `schema.sql`, then every migration in order.
+
 ## Charts and private projects
 
 Charts reach Asterion from coaia-narrative memories registered with

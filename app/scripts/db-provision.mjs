@@ -6,13 +6,18 @@
 // This applies it — and the layer taxonomy the app reads — to whatever
 // DATABASE_URL points at.
 //
-//   node scripts/db-provision.mjs            apply schema + reference data
-//   node scripts/db-provision.mjs --schema   schema only
-//   node scripts/db-provision.mjs --verify   report what is there, change nothing
+//   node scripts/db-provision.mjs                 apply schema, migrations, reference data
+//   node scripts/db-provision.mjs --schema        schema and migrations only
+//   node scripts/db-provision.mjs --migration 001 one migration, nothing else
+//   node scripts/db-provision.mjs --verify        report what is there, change nothing
+//
+// A change to a live database is a numbered file in db/migrations/
+// (NNN-what-it-does.sql), written to replay as a no-op, and applied alone with
+// --migration. A fresh database gets schema.sql, then every migration in order.
 //
 // Idempotent: replaying against a provisioned database is a no-op.
 
-import { readFileSync, existsSync } from 'node:fs'
+import { readFileSync, readdirSync, existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { neon } from '@neondatabase/serverless'
@@ -114,10 +119,24 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const host = process.env.DATABASE_URL.match(/@([^/:]+)/)?.[1] ?? 'unknown host'
   console.log(`asterion → ${host}\n`)
 
+  const migrationsDir = join(ROOT, 'db', 'migrations')
+  const migrations = existsSync(migrationsDir)
+    ? readdirSync(migrationsDir).filter((f) => /^\d{3}-.+\.sql$/.test(f)).sort()
+    : []
+
   if (args.has('--verify')) {
     await verify()
+  } else if (args.has('--migration')) {
+    const n = process.argv[process.argv.indexOf('--migration') + 1] ?? ''
+    const match = migrations.filter((f) => f.startsWith(`${n}-`))
+    if (!/^\d{3}$/.test(n) || match.length !== 1) {
+      console.error(`--migration takes a number naming one file in db/migrations/ (have: ${migrations.join(', ') || 'none'})`)
+      process.exit(1)
+    }
+    await apply(`migrations/${match[0]}`)
   } else {
     await apply('schema.sql')
+    for (const m of migrations) await apply(`migrations/${m}`)
     if (!args.has('--schema')) await apply('seed.sql')
     console.log('')
     await verify()
