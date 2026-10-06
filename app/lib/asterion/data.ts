@@ -349,6 +349,27 @@ export async function getNarrativeThreads(viewer: Viewer): Promise<NarrativeThre
   return result as NarrativeThread[]
 }
 
+/** One thread, or null when it does not exist or this viewer may not see it. */
+export async function getNarrativeThread(id: string, viewer: Viewer): Promise<NarrativeThread | null> {
+  const result = await sql.query(
+    `SELECT * FROM asterion.narrative_threads
+      WHERE id = $1 ${seesPrivate(viewer) ? '' : `AND id NOT IN (${PRIVATE_THREAD_IDS})`}`,
+    [id]
+  )
+  return (result[0] as NarrativeThread) ?? null
+}
+
+/** The beats a thread holds itself (a ceremony's turns), in the order they were spoken. */
+export async function getThreadBeats(threadId: string, viewer: Viewer): Promise<NarrativeBeat[]> {
+  const result = await sql.query(
+    `SELECT * FROM asterion.narrative_beats
+      WHERE thread_id = $1 ${seesPrivate(viewer) ? '' : `AND thread_id NOT IN (${PRIVATE_THREAD_IDS})`}
+      ORDER BY created_at, id`,
+    [threadId]
+  )
+  return result as NarrativeBeat[]
+}
+
 export async function createNarrativeThread(
   name: string,
   threadType?: string,

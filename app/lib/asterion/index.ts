@@ -77,6 +77,8 @@ export {
   getMMOTEvaluations,
   // Narrative
   getNarrativeThreads,
+  getNarrativeThread,
+  getThreadBeats,
   createNarrativeThread,
   addTensionToThread,
   createNarrativeBeat,

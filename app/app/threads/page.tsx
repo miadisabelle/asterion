@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useThreads } from '@/lib/asterion/hooks'
 import { AppShell } from '@/components/asterion/app-shell'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -39,7 +40,8 @@ export default function ThreadsPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {threads.map(thread => (
-            <Card key={thread.id}>
+            <Link key={thread.id} href={`/threads/${thread.id}`} className="block">
+            <Card className="h-full transition-colors hover:bg-muted/50">
               <CardHeader>
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0 flex-1">
@@ -64,6 +66,7 @@ export default function ThreadsPage() {
                 </p>
               </CardContent>
             </Card>
+            </Link>
           ))}
         </div>
       )}

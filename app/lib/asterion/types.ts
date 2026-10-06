@@ -192,6 +192,9 @@ export interface NarrativeThread {
   description: string | null
   metadata: Record<string, unknown>
   created_at: string
+  /** Set on a thread projected from another system, e.g. 'medicine-wheel:<circle id>'. */
+  external_id?: string | null
+  external_source?: string | null
   // Relations
   tensions?: ThreadTension[]
 }
@@ -205,7 +208,9 @@ export interface ThreadTension {
 
 export interface NarrativeBeat {
   id: string
-  tension_id: string
+  /** A beat is held by a tension, a thread, or both (migration 001). */
+  tension_id: string | null
+  thread_id: string | null
   beat_type: string
   title: string | null
   content: string
