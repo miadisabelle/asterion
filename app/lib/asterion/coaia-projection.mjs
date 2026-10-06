@@ -38,7 +38,8 @@ export const SYSTEM = 'coaia-narrative'
 /** Raise when the mapping changes, so every project re-projects on its next pass. */
 // 4: parents from metadata.parentChart (what coaia-narrative writes), and a
 // telescoped child chart is work of its parent (contract getWork).
-export const MAPPER_VERSION = 4
+// 5: a flat step and the child it opened into are one step (contract childChartId).
+export const MAPPER_VERSION = 5
 export const KEY_PATTERN = /^[a-z0-9][a-z0-9._-]{0,63}$/
 export const sourceFor = (key) => `${SYSTEM}:${key}`
 
@@ -148,22 +149,13 @@ export function planProjection(input, { file = null } = {}) {
   const of = (type) => entities.filter((e) => e.entityType === type)
   const chartIdOf = (e) => (typeof e.metadata.chartId === 'string' && e.metadata.chartId) || e.name.replace(/_chart$/, '')
   const telescopeStepId = (childChartId) => `telescope:${childChartId}`
-  // Some writers (Miadi's chart editor, the visualizer) keep a flat step that names
-  // its child chart: telescopedToChartId, or telescopedChartId. That step already
-  // stands for the child, so the child is not added again as a second step.
-  const telescopedFrom = (s) => asText(s.metadata.telescopedToChartId) ?? asText(s.metadata.telescopedChartId)
+  // The chart's work, as the contract counts it (getWork, coaia-narrative 0.21): flat
+  // steps, a flat step that opened into a child chart carrying childChartId (whichever
+  // side wrote the link), and child charts no step stands for.
+  const workOf = new Map(of('structural_tension_chart').map((e) => [chartIdOf(e), getWork(store, chartIdOf(e))]))
   const stepForChild = new Map()
-  for (const s of entities) {
-    if (s.entityType === 'action_step' && telescopedFrom(s)) stepForChild.set(telescopedFrom(s), s.name)
-  }
-  // coaia-narrative's own telescopeActionStep names the step on the child instead.
-  for (const c of entities) {
-    const step = c.entityType === 'structural_tension_chart' ? asText(c.metadata.parentActionStep) : null
-    if (step && byName.get(step)?.entityType === 'action_step') stepForChild.set(chartIdOf(c), step)
-  }
-  for (const [child, step] of stepForChild) {
-    const s = byName.get(step)
-    if (s && !telescopedFrom(s)) s.metadata = { ...s.metadata, telescopedToChartId: child }
+  for (const work of workOf.values()) {
+    for (const w of work) if (w.childChartId) stepForChild.set(w.childChartId, w.id)
   }
 
   // A chart's parent: metadata.parentChart, the key coaia-narrative writes and its
@@ -188,11 +180,10 @@ export function planProjection(input, { file = null } = {}) {
     const outcome = byName.get(`${chartId}_desired_outcome`)
     const reality = byName.get(`${chartId}_current_reality`)
     const desired = text(outcome) || text(e) || chartId
-    const steps = of('action_step').filter((s) => s.metadata.chartId === chartId)
-    // The chart's work, as the contract counts it: its flat steps and its telescoped
-    // child charts. A child becomes a step of this chart that telescopes to it.
-    const work = getWork(store, chartId)
-    const children = work.filter((w) => w.telescoped && byName.has(`${w.id}_chart`) && !stepForChild.has(w.id))
+    const work = workOf.get(chartId) ?? []
+    const steps = work.filter((w) => !w.telescoped).map((w) => byName.get(w.id)).filter(Boolean)
+    // A child chart no flat step stands for becomes a step of this chart that telescopes to it.
+    const children = work.filter((w) => w.telescoped && byName.has(`${w.id}_chart`))
     const done = steps.filter((s) => s.metadata.completionStatus === true).length + children.filter((w) => w.completed).length
     const total = steps.length + children.length
     const beats = of('narrative_beat').filter((b) => b.metadata.chartId === chartId)
@@ -219,7 +210,7 @@ export function planProjection(input, { file = null } = {}) {
         status: s.metadata.completionStatus === true ? 'completed' : 'pending',
         sort_order: i,
         dueDate: asDate(s.metadata.dueDate),
-        telescopedToChartId: telescopedFrom(s),
+        telescopedToChartId: work.find((w) => w.id === s.name)?.childChartId ?? asText(s.metadata.telescopedToChartId),
       })).concat(children.map((w, i) => {
         const childOutcome = byName.get(`${w.id}_desired_outcome`)
         const childChart = byName.get(`${w.id}_chart`)
