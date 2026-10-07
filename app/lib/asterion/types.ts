@@ -185,6 +185,8 @@ export interface MMOTEvaluation {
 }
 
 // Narrative Threading
+export type ThreadState = 'emerging' | 'active' | 'resolved' | 'deferred' | 'blocked' | 'superseded'
+
 export interface NarrativeThread {
   id: string
   name: string
@@ -195,6 +197,15 @@ export interface NarrativeThread {
   /** Set on a thread projected from another system, e.g. 'medicine-wheel:<circle id>'. */
   external_id?: string | null
   external_source?: string | null
+  /** One of six states (D13), or null when the keeper says nothing that maps to one (migration 002). */
+  state?: ThreadState | null
+  /** The keeper's own word for the state, kept as written (D17). */
+  state_note?: string | null
+  opened_at?: string | null
+  resolved_at?: string | null
+  /** The thread this one replaced, or the one it split from. */
+  supersedes?: string | null
+  split_from?: string | null
   // Relations
   tensions?: ThreadTension[]
 }

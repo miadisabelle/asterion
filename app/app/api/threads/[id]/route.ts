@@ -1,6 +1,6 @@
 // GET /api/threads/[id] - One narrative thread, the charts it holds, and its beats
 //
-// A chart-family thread holds charts, and its beats are theirs. A ceremony
+// A chart thread holds charts, and its beats are theirs. A ceremony
 // thread (miadisabelle/asterion#11) holds the turns spoken in it. Either way
 // the beats come in the order they happened (miadisabelle/asterion#20 A39).
 // A ceremony's people speak, witness and close in Miadi, so the answer carries

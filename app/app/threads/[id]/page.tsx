@@ -43,8 +43,10 @@ export default function ThreadDetailPage({ params }: { params: Promise<{ id: str
   }
 
   const meta = (thread.metadata ?? {}) as Record<string, unknown>
-  const openedAt = typeof meta.opened_at === 'string' ? meta.opened_at : null
-  const closedAt = typeof meta.closed_at === 'string' ? meta.closed_at : null
+  // The columns of migration 002, else what a ceremony thread keeps in metadata.
+  const openedAt = thread.opened_at ?? (typeof meta.opened_at === 'string' ? meta.opened_at : null)
+  const closedAt = thread.resolved_at ?? (typeof meta.closed_at === 'string' ? meta.closed_at : null)
+  const stateNote = thread.state_note && thread.state_note !== thread.state ? thread.state_note : null
   const beats = (data?.beats ?? []) as unknown as Beat[]
   const charts = data?.charts ?? []
   const chartTitles = Object.fromEntries(charts.map((c) => [c.id, c.title]))
@@ -61,8 +63,13 @@ export default function ThreadDetailPage({ params }: { params: Promise<{ id: str
         </div>
         <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           {thread.thread_type && <span className="rounded-full bg-muted px-2 py-0.5">{thread.thread_type}</span>}
+          {thread.state && (
+            <span className="rounded-full border px-2 py-0.5 text-foreground" title={stateNote ? `The keeper says: ${stateNote}` : undefined}>
+              {thread.state}{stateNote ? ` · ${stateNote}` : ''}
+            </span>
+          )}
           {openedAt && <span>Opened {spokenAt(openedAt)}</span>}
-          {openedAt && <span>{closedAt ? `Closed ${spokenAt(closedAt)}` : 'Open'}</span>}
+          {closedAt ? <span>{thread.resolved_at ? 'Resolved' : 'Closed'} {spokenAt(closedAt)}</span> : openedAt && !thread.state && <span>Open</span>}
           {meta.archived === true && <span>No longer on the wheel</span>}
           <ProvenanceBadges source={thread.external_source} />
         </div>

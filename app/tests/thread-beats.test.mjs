@@ -47,7 +47,7 @@ test("a chart family's beats name their chart and kind, in the order they happen
     { id: 'b1', beat_type: 'mmot_evaluation', tension_id: 't-child', title: 'Evaluated the step', content: 'Evaluated the step\nIt held.', created_at: '2026-08-02T03:15:57.035Z', metadata: { timestamp: '2026-08-02T03:15:57.035Z' } },
     { id: 'b2', beat_type: 'resolution', tension_id: 't-root', title: 'Resolved', content: 'Resolved', created_at: '2026-08-16T04:21:54.966Z', metadata: {} },
   ]
-  const html = render(beats, { charts, empty: emptyLine('chart-family') })
+  const html = render(beats, { charts, empty: emptyLine('chart') })
   assert.ok(html.indexOf('Telescoped chart') < html.indexOf('Root chart'))
   assert.match(html, /2026-08-02 03:15 UTC/)
   assert.match(html, />mmot_evaluation</)
@@ -58,7 +58,7 @@ test("a chart family's beats name their chart and kind, in the order they happen
 
 test('an empty thread says what it is waiting for, by type, and no thread shows a count', () => {
   assert.match(render([], { empty: emptyLine('ceremony') }), /No consented turn has been carried here yet\./)
-  assert.match(render([], { empty: emptyLine('chart-family') }), /The charts in this family carry no beat yet\./)
+  assert.match(render([], { empty: emptyLine('chart') }), /The charts in this family carry no beat yet\./)
   assert.match(render([], { empty: emptyLine(null) }), /Nothing has been carried into this thread yet\./)
   assert.ok(!/\d+ (turns?|beats?)/.test(render(turns)), 'no engagement count')
 })

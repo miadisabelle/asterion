@@ -34,7 +34,8 @@ export function spokenAt(iso: string | undefined | null): string {
 /** What an empty thread says, by what kind of thread it is. */
 export function emptyLine(threadType: string | null | undefined): string {
   if (threadType === 'ceremony') return 'No consented turn has been carried here yet.'
-  if (threadType === 'chart-family') return 'The charts in this family carry no beat yet.'
+  // 'chart-family' is the name before MAPPER_VERSION 7, kept until every project re-projects.
+  if (threadType === 'chart' || threadType === 'chart-family') return 'The charts in this family carry no beat yet.'
   return 'Nothing has been carried into this thread yet.'
 }
 

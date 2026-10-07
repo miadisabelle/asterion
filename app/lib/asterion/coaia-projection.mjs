@@ -24,7 +24,7 @@
 //   structural_tension_chart → tensions (github_* from metadata.github)
 //   action_step              → action_steps
 //   narrative_beat           → narrative_beats
-//   chart family with beats  → narrative_threads + thread_tensions
+//   chart family with beats  → narrative_threads (thread_type 'chart') + thread_tensions
 //   every entity / relation  → entities / relations
 //   every chart              → project_tensions
 
@@ -40,7 +40,8 @@ export const SYSTEM = 'coaia-narrative'
 // telescoped child chart is work of its parent (contract getWork).
 // 5: a flat step and the child it opened into are one step (contract childChartId).
 // 6: a beat's created_at is when it happened (metadata.timestamp), not the pass (miadisabelle/asterion#20 A38).
-export const MAPPER_VERSION = 6
+// 7: thread_type 'chart' (was 'chart-family'), and a thread's state and opened_at from its root chart (A51, D16).
+export const MAPPER_VERSION = 7
 export const KEY_PATTERN = /^[a-z0-9][a-z0-9._-]{0,63}$/
 export const sourceFor = (key) => `${SYSTEM}:${key}`
 
@@ -49,6 +50,8 @@ export const CACHE_PATTERNS = ['tensions:*', 'tension:*', 'projects:*', 'project
 
 const PHASES = new Set(['germination', 'assimilation', 'completion'])
 const STATUSES = new Set(['active', 'paused', 'resolved', 'archived'])
+/** A root chart's status as one of a thread's six states (D13). A word with no match leaves the state empty. */
+const THREAD_STATE = { active: 'active', paused: 'deferred', resolved: 'resolved' }
 
 const sha = (value) => createHash('sha256').update(typeof value === 'string' ? value : JSON.stringify(value)).digest('hex')
 export const hashText = (text) => sha(text)
@@ -198,6 +201,9 @@ export function planProjection(input, { file = null } = {}) {
       current_reality: text(reality) || '(not recorded in the source memory)',
       phase: PHASES.has(e.metadata.phase) ? e.metadata.phase : 'germination',
       status: STATUSES.has(e.metadata.status) ? e.metadata.status : 'active',
+      // The record's own words, for the thread this chart may be the root of.
+      record_status: asText(e.metadata.status),
+      created_at: asTime(e.metadata.createdAt),
       due_date: asDate(e.metadata.dueDate),
       telescope_depth: asInt(e.metadata.level) ?? 0,
       progress: total ? Math.round((done / total) * 100) : 0,
@@ -255,7 +261,9 @@ export function planProjection(input, { file = null } = {}) {
     return cur
   }
 
-  // One thread per chart family that actually carries beats.
+  // One thread per chart family that actually carries beats. The root chart is
+  // the thread's record (Q5): its status gives the state, its creation the opening.
+  // It has no completion time, so a chart thread's resolved_at stays empty.
   const threads = []
   for (const c of charts) {
     const root = familyRoot(c)
@@ -265,8 +273,11 @@ export function planProjection(input, { file = null } = {}) {
     threads.push({
       rootChartId: root.chartId,
       name: root.title,
-      thread_type: 'chart-family',
+      thread_type: 'chart',
       description: `The chart ${root.chartId} and the charts telescoped from it`,
+      state: THREAD_STATE[root.status] ?? null,
+      state_note: root.record_status,
+      opened_at: root.created_at,
       members: family.map((x) => x.chartId),
     })
   }
@@ -569,13 +580,16 @@ export async function applyProjection(sql, plan, { project, actor, whole = true,
   if (whole) {
     for (const t of plan.threads) {
       const row = await one(
-        `INSERT INTO asterion.narrative_threads (external_id, external_source, name, thread_type, description, metadata)
-         VALUES ($1,$2,$3,$4,$5,$6)
+        `INSERT INTO asterion.narrative_threads
+           (external_id, external_source, name, thread_type, description, metadata, state, state_note, opened_at)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)
          ON CONFLICT (external_id, external_source) DO UPDATE SET
            name = EXCLUDED.name, thread_type = EXCLUDED.thread_type,
-           description = EXCLUDED.description, metadata = EXCLUDED.metadata
+           description = EXCLUDED.description, metadata = EXCLUDED.metadata,
+           state = EXCLUDED.state, state_note = EXCLUDED.state_note, opened_at = EXCLUDED.opened_at
          RETURNING id`,
-        [t.rootChartId, source, t.name, t.thread_type, t.description, JSON.stringify({ source: { system: SYSTEM, key, file: plan.file } })]
+        [t.rootChartId, source, t.name, t.thread_type, t.description, JSON.stringify({ source: { system: SYSTEM, key, file: plan.file } }),
+          t.state, t.state_note, t.opened_at]
       )
       for (const [i, chartId] of t.members.entries()) {
         await sql.query(
