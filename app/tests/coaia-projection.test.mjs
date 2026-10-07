@@ -21,7 +21,7 @@ test('a chart family is a thread of type chart, opened when its root chart was c
   assert.equal(t.thread_type, 'chart')
   assert.equal(t.rootChartId, 'chart_1')
   assert.equal(t.opened_at, '2026-05-22T10:00:00.000Z')
-  assert.equal(MAPPER_VERSION, 7)
+  assert.equal(MAPPER_VERSION, 8)
 })
 
 test("the thread's state is read from its root chart, and the chart's own word is kept", () => {

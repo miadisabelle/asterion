@@ -73,6 +73,15 @@ export default function ThreadDetailPage({ params }: { params: Promise<{ id: str
           {meta.archived === true && <span>No longer on the wheel</span>}
           <ProvenanceBadges source={thread.external_source} />
         </div>
+        {thread.state === 'superseded' && typeof meta.superseded_by === 'string' && (
+          <p className="text-sm">
+            Its chart is followed now in{' '}
+            <Link href={`/threads/${meta.superseded_by}`} className="underline underline-offset-4">
+              the thread that holds it
+            </Link>
+            .
+          </p>
+        )}
         {thread.description && thread.description !== thread.name && (
           <p className="whitespace-pre-wrap text-sm text-muted-foreground">{thread.description}</p>
         )}

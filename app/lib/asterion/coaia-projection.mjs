@@ -41,7 +41,8 @@ export const SYSTEM = 'coaia-narrative'
 // 5: a flat step and the child it opened into are one step (contract childChartId).
 // 6: a beat's created_at is when it happened (metadata.timestamp), not the pass (miadisabelle/asterion#20 A38).
 // 7: thread_type 'chart' (was 'chart-family'), and a thread's state and opened_at from its root chart (A51, D16).
-export const MAPPER_VERSION = 7
+// 8: a thread the record no longer draws, its root chart now in another family, is marked superseded.
+export const MAPPER_VERSION = 8
 export const KEY_PATTERN = /^[a-z0-9][a-z0-9._-]{0,63}$/
 export const sourceFor = (key) => `${SYSTEM}:${key}`
 
@@ -578,6 +579,7 @@ export async function applyProjection(sql, plan, { project, actor, whole = true,
 
   // threads: derived from the whole family, so only a whole plan may draw them
   if (whole) {
+    const threadRow = new Map()
     for (const t of plan.threads) {
       const row = await one(
         `INSERT INTO asterion.narrative_threads
@@ -598,6 +600,25 @@ export async function applyProjection(sql, plan, { project, actor, whole = true,
           [row.id, tensionId.get(chartId), i]
         )
       }
+      threadRow.set(t.rootChartId, row.id)
+    }
+    // A thread an earlier pass drew whose root chart now belongs to another
+    // family is no longer a thread in the record. It is kept, marked superseded,
+    // and points at the thread that holds its chart now. Nothing is deleted.
+    const holder = new Map()
+    for (const t of plan.threads) for (const m of t.members) holder.set(m, threadRow.get(t.rootChartId))
+    const earlier = await sql.query(
+      `SELECT id, external_id FROM asterion.narrative_threads WHERE external_source = $1 AND NOT (external_id = ANY($2::text[]))`,
+      [source, plan.threads.map((t) => t.rootChartId)]
+    )
+    for (const e of earlier) {
+      const by = holder.get(e.external_id)
+      if (!by || by === e.id) continue
+      await sql.query(
+        `UPDATE asterion.narrative_threads SET thread_type = 'chart', state = 'superseded',
+           metadata = metadata || $2::jsonb WHERE id = $1`,
+        [e.id, JSON.stringify({ superseded_by: by })]
+      )
     }
   }
 
