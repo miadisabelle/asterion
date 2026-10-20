@@ -22,7 +22,7 @@
 //
 // The mapping:
 //   structural_tension_chart → tensions (github_* from metadata.github)
-//   action_step              → action_steps
+//   action_step              → action_steps (status 'delayed' while a delay is open)
 //   narrative_beat           → narrative_beats
 //   chart family with beats  → narrative_threads (thread_type 'chart') + thread_tensions
 //   every entity / relation  → entities / relations
@@ -33,6 +33,7 @@ import { createHash } from 'node:crypto'
 // which line is an entity, a relation, or a legacy beat — comes from its contract,
 // so a dialect it learns is one Asterion reads without a change here.
 import { parseStore, getWork } from 'coaia-narrative/contract'
+import { delayHistoryCount, delayRecordOf, isOpenDelay, isOwed, publicDelay } from './delayed-resolution.mjs'
 
 export const SYSTEM = 'coaia-narrative'
 /** Raise when the mapping changes, so every project re-projects on its next pass. */
@@ -42,7 +43,9 @@ export const SYSTEM = 'coaia-narrative'
 // 6: a beat's created_at is when it happened (metadata.timestamp), not the pass (miadisabelle/asterion#20 A38).
 // 7: thread_type 'chart' (was 'chart-family'), and a thread's state and opened_at from its root chart (A51, D16).
 // 8: a thread the record no longer draws, its root chart now in another family, is marked superseded.
-export const MAPPER_VERSION = 8
+// 9: a step keeps its delayed resolution (status 'delayed' while open, the record without its
+//    session in metadata), and a chart thread with an open delay says so in metadata.delaying (ep297).
+export const MAPPER_VERSION = 9
 export const KEY_PATTERN = /^[a-z0-9][a-z0-9._-]{0,63}$/
 export const sourceFor = (key) => `${SYSTEM}:${key}`
 
@@ -138,11 +141,13 @@ function githubOf(meta = {}) {
 // ---------- the plan ----------
 
 /**
- * Turn a memory file into what Asterion will hold. Pure: no database, no clock.
+ * Turn a memory file into what Asterion will hold. Pure: no database, and the same
+ * input with the same `now` gives the same plan. `now` only says whether a thread's
+ * open delay is owed; no hash depends on it.
  * @param {string | object[]} input  the file's text, or its records
- * @param {{ file?: string | null }} [opts]
+ * @param {{ file?: string | null, now?: number }} [opts]
  */
-export function planProjection(input, { file = null } = {}) {
+export function planProjection(input, { file = null, now = Date.now() } = {}) {
   const raw = typeof input === 'string' ? input : input.map((r) => JSON.stringify(r)).join('\n')
   const store = parseStore(raw)
   const entities = [...store.entities.values()]
@@ -182,6 +187,20 @@ export function planProjection(input, { file = null } = {}) {
     return null
   }
 
+  // A step's delayed resolution (coaia-narrative 0.24, miadi-chronicle Episode 297). A written
+  // step keeps it on its action_step entity, a telescoped step on its child chart's desired
+  // outcome; a flat step that opened into a child chart is read on its own entity first.
+  // Completed wins over delayed. The keys are added only when a record exists, so a chart
+  // with no delay keeps the hash it had and logs no change.
+  const delayOf = (stepEntity, childChartId, completed) => {
+    const holder = delayRecordOf(stepEntity?.metadata) ? stepEntity : childChartId ? byName.get(`${childChartId}_desired_outcome`) : null
+    const record = delayRecordOf(holder?.metadata)
+    return {
+      status: completed ? 'completed' : isOpenDelay(record) ? 'delayed' : 'pending',
+      extra: record ? { delay: publicDelay(record), delayHistoryCount: delayHistoryCount(holder.metadata) } : {},
+    }
+  }
+
   const charts = of('structural_tension_chart').map((e) => {
     const chartId = chartIdOf(e)
     const outcome = byName.get(`${chartId}_desired_outcome`)
@@ -213,28 +232,35 @@ export function planProjection(input, { file = null } = {}) {
       sourceActionStepId: asText(e.metadata.sourceActionStepId) ?? stepForChild.get(chartId) ?? (parentOf(chartId) ? telescopeStepId(chartId) : null),
       elementsOfPerformance: Array.isArray(e.metadata.elementsOfPerformance) ? e.metadata.elementsOfPerformance : [],
       github: githubOf(e.metadata),
-      steps: steps.map((s, i) => ({
-        name: s.name,
-        title: firstLine(text(s), 200) || s.name,
-        description: text(s),
-        status: s.metadata.completionStatus === true ? 'completed' : 'pending',
-        sort_order: i,
-        dueDate: asDate(s.metadata.dueDate),
-        telescopedToChartId: work.find((w) => w.id === s.name)?.childChartId ?? asText(s.metadata.telescopedToChartId),
-      })).concat(children.map((w, i) => {
+      steps: steps.map((s, i) => {
+        const telescopedToChartId = work.find((w) => w.id === s.name)?.childChartId ?? asText(s.metadata.telescopedToChartId)
+        const delay = delayOf(s, telescopedToChartId, s.metadata.completionStatus === true)
+        return {
+          name: s.name,
+          title: firstLine(text(s), 200) || s.name,
+          description: text(s),
+          status: delay.status,
+          sort_order: i,
+          dueDate: asDate(s.metadata.dueDate),
+          telescopedToChartId,
+          ...delay.extra,
+        }
+      }).concat(children.map((w, i) => {
         const childOutcome = byName.get(`${w.id}_desired_outcome`)
         const childChart = byName.get(`${w.id}_chart`)
+        const delay = delayOf(null, w.id, Boolean(w.completed))
         return {
           name: telescopeStepId(w.id),
           title: firstLine(text(childOutcome), 200) || w.id,
           description: text(childOutcome),
-          status: w.completed ? 'completed' : 'pending',
+          status: delay.status,
           sort_order: steps.length + i,
           dueDate: asDate(w.dueDate),
           telescopedToChartId: w.id,
           // The GitHub issue the child records, so a step made on the site for that
           // sub-issue can be recognised as this one.
           github: githubOf(childChart?.metadata),
+          ...delay.extra,
         }
       })),
       beats: beats.map((b) => ({
@@ -262,6 +288,18 @@ export function planProjection(input, { file = null } = {}) {
     return cur
   }
 
+  // A family whose steps carry an open delay says so beside its state, never in it:
+  // state and state_note stay the keeper's words (D17). Earliest resolveBy first;
+  // owed is as of `now`, which asOf names, and a page reads it again from resolveBy.
+  const at = (time) => { const t = Date.parse(time); return Number.isNaN(t) ? Infinity : t }
+  const delayingOf = (family) => {
+    const steps = family
+      .flatMap((c) => c.steps.filter((s) => s.status === 'delayed').map((s) => ({ step: s.name, chartId: c.chartId, title: s.title, resolveBy: s.delay.resolveBy })))
+      .sort((a, b) => at(a.resolveBy) - at(b.resolveBy))
+    if (!steps.length) return null
+    return { resolveBy: steps[0].resolveBy, owed: steps.some((s) => isOwed(s.resolveBy, now)), asOf: new Date(now).toISOString(), steps }
+  }
+
   // One thread per chart family that actually carries beats. The root chart is
   // the thread's record (Q5): its status gives the state, its creation the opening.
   // It has no completion time, so a chart thread's resolved_at stays empty.
@@ -271,6 +309,7 @@ export function planProjection(input, { file = null } = {}) {
     if (threads.some((t) => t.rootChartId === root.chartId)) continue
     const family = charts.filter((x) => familyRoot(x).chartId === root.chartId)
     if (!family.some((x) => x.beats.length)) continue
+    const delaying = delayingOf(family)
     threads.push({
       rootChartId: root.chartId,
       name: root.title,
@@ -280,6 +319,7 @@ export function planProjection(input, { file = null } = {}) {
       state_note: root.record_status,
       opened_at: root.created_at,
       members: family.map((x) => x.chartId),
+      ...(delaying ? { delaying } : {}),
     })
   }
 
@@ -530,6 +570,8 @@ export async function applyProjection(sql, plan, { project, actor, whole = true,
           JSON.stringify({
             dueDate: s.dueDate, telescopedToChartId: s.telescopedToChartId, source: { system: SYSTEM, key, entity: s.name },
             ...(s.github?.number ? { github: { subIssue: { owner: s.github.owner, repo: s.github.repo, number: s.github.number } } } : {}),
+            // The delay without its session: rows of a public project are read by anyone.
+            ...(s.delay ? { delayedResolution: s.delay, delayedResolutionHistoryCount: s.delayHistoryCount } : {}),
           }),
         ]
       )
@@ -590,7 +632,8 @@ export async function applyProjection(sql, plan, { project, actor, whole = true,
            description = EXCLUDED.description, metadata = EXCLUDED.metadata,
            state = EXCLUDED.state, state_note = EXCLUDED.state_note, opened_at = EXCLUDED.opened_at
          RETURNING id`,
-        [t.rootChartId, source, t.name, t.thread_type, t.description, JSON.stringify({ source: { system: SYSTEM, key, file: plan.file } }),
+        [t.rootChartId, source, t.name, t.thread_type, t.description,
+          JSON.stringify({ source: { system: SYSTEM, key, file: plan.file }, ...(t.delaying ? { delaying: t.delaying } : {}) }),
           t.state, t.state_note, t.opened_at]
       )
       for (const [i, chartId] of t.members.entries()) {

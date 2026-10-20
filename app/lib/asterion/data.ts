@@ -2,6 +2,7 @@
 import { sql } from './db'
 import { invalidateCache, getCache, setCache } from './redis'
 import { publicProject } from './coaia-projection.mjs'
+import { publicEntity } from './delayed-resolution.mjs'
 import { PRIVATE_PROJECT_IDS, PRIVATE_SOURCES, PRIVATE_TENSION_IDS, PRIVATE_THREAD_IDS, seesPrivate, type Viewer } from './visibility'
 import type { 
   Project, 
@@ -188,7 +189,9 @@ export async function getEntities(filters: {
   const query = `SELECT * FROM asterion.entities ${whereClause} ORDER BY created_at DESC`
 
   const result = await sql.query(query, params)
-  return result as Entity[]
+  // A delayed step's session (host, directory, tmux pane, resume command) is for writers only.
+  if (seesPrivate(viewer)) return result as Entity[]
+  return (result as Entity[]).map((e) => publicEntity(e) as Entity)
 }
 
 export async function getEntityById(id: string): Promise<Entity | null> {

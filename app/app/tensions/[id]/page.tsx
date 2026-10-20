@@ -3,7 +3,7 @@
 import { use, useState } from 'react'
 import { useTension, updateTension, createActionStep } from '@/lib/asterion/hooks'
 import { AppShell } from '@/components/asterion/app-shell'
-import { PhaseBadge, StatusBadge, LayerBadge, EdgeTypeBadge } from '@/components/asterion/badges'
+import { PhaseBadge, StatusBadge, LayerBadge, EdgeTypeBadge, StepDelay } from '@/components/asterion/badges'
 import { ProvenanceBadges } from '@/components/asterion/provenance'
 import { TensionCard } from '@/components/asterion/tension-card'
 import { Button } from '@/components/ui/button'
@@ -347,6 +347,7 @@ export default function TensionDetailPage({ params }: { params: Promise<{ id: st
                               {step.description}
                             </p>
                           )}
+                          <StepDelay metadata={step.metadata} />
                         </div>
                       </div>
                     )

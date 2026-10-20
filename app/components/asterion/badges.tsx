@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils'
 import type { Phase, TensionStatus, LayerType } from '@/lib/asterion/types'
+import { dayOf, isOwed, remainingWords, stepDelayOf } from '@/lib/asterion/delayed-resolution.mjs'
 
 export function PhaseBadge({ phase }: { phase: Phase }) {
   return (
@@ -63,5 +64,51 @@ export function EdgeTypeBadge({ edgeType }: { edgeType: string }) {
     <span className={cn('inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium', colors[edgeType] || 'bg-muted text-muted-foreground')}>
       {edgeType.replace('_', ' ')}
     </span>
+  )
+}
+
+/** "delayed until <day> · in n days", or "· owed" once the day has passed. */
+export function DelayBadge({ resolveBy, now = Date.now() }: { resolveBy: string; now?: number }) {
+  const owed = isOwed(resolveBy, now)
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium',
+        owed ? 'bg-destructive/20 text-destructive' : 'bg-[oklch(0.6_0.1_50/0.2)] text-[oklch(0.7_0.1_50)]'
+      )}
+      title={`Resolution chosen to wait until ${resolveBy}`}
+    >
+      delayed until {dayOf(resolveBy)} · {remainingWords(resolveBy, now)}
+    </span>
+  )
+}
+
+/**
+ * A step's due date and its delayed resolution, read from the step's metadata
+ * (miadi-chronicle Episode 297): until when, why, what the wait serves, and the
+ * events that wake it. The session is never in a step row, so it is never shown here.
+ */
+export function StepDelay({ metadata, now = Date.now() }: { metadata: Record<string, unknown> | null | undefined; now?: number }) {
+  const delay = stepDelayOf(metadata)
+  const open = delay && !delay.endedAt ? delay : null
+  const due = typeof metadata?.dueDate === 'string' ? dayOf(metadata.dueDate) : null
+  // Choosing a delay moves the due date to resolveBy, so the badge already says it.
+  const showDue = due && !(open && dayOf(open.resolveBy) === due)
+  if (!open && !showDue && !delay?.endedAt) return null
+  return (
+    <div className="mt-1 space-y-0.5 text-xs text-muted-foreground">
+      <div className="flex flex-wrap items-center gap-2">
+        {open && <DelayBadge resolveBy={open.resolveBy} now={now} />}
+        {showDue && <span>due {due}</span>}
+        {delay?.endedAt && (
+          <span>
+            delay ended {dayOf(delay.endedAt)}{delay.outcome ? ` · ${delay.outcome}` : ''}
+          </span>
+        )}
+      </div>
+      {open?.reason && <p>Why wait: {open.reason}</p>}
+      {open?.primaryChoice && <p>Serves: {open.primaryChoice}</p>}
+      {open && open.wakeOn.length > 0 && <p>Wake on: {open.wakeOn.join(' · ')}</p>}
+    </div>
   )
 }

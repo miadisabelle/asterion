@@ -2,7 +2,8 @@
 
 export type Phase = 'germination' | 'assimilation' | 'completion'
 export type TensionStatus = 'active' | 'paused' | 'resolved' | 'archived'
-export type ActionStepStatus = 'pending' | 'in_progress' | 'completed' | 'blocked' | 'skipped'
+/** 'delayed': a step someone chose to wait on, until its delayedResolution.resolveBy (miadi-chronicle Episode 297). */
+export type ActionStepStatus = 'pending' | 'in_progress' | 'completed' | 'blocked' | 'skipped' | 'delayed'
 export type EdgeType = 'blocks' | 'depends_on' | 'relates_to' | 'duplicates' | 'supersedes'
 export type LayerType = 'runtime' | 'memory' | 'governance' | 'pde' | 'docs' | 'security' | 'operator'
 export type MMOTPhase = 'acknowledge' | 'analyze' | 'update_chart' | 'recommit_or_redirect'

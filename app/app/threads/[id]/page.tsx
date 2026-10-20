@@ -9,6 +9,7 @@ import { ThreadBeats, emptyLine, spokenAt, type Beat } from '@/components/asteri
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { AlertCircle, ChevronLeft, ExternalLink } from 'lucide-react'
+import { dayOf, isOwed, threadDelayingOf } from '@/lib/asterion/delayed-resolution.mjs'
 
 export default function ThreadDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -47,6 +48,8 @@ export default function ThreadDetailPage({ params }: { params: Promise<{ id: str
   const openedAt = thread.opened_at ?? (typeof meta.opened_at === 'string' ? meta.opened_at : null)
   const closedAt = thread.resolved_at ?? (typeof meta.closed_at === 'string' ? meta.closed_at : null)
   const stateNote = thread.state_note && thread.state_note !== thread.state ? thread.state_note : null
+  // A step of the family chose to wait (miadi-chronicle Episode 297). Shown beside the state, never in it (D17).
+  const delaying = threadDelayingOf(meta)
   const beats = (data?.beats ?? []) as unknown as Beat[]
   const charts = data?.charts ?? []
   const chartTitles = Object.fromEntries(charts.map((c) => [c.id, c.title]))
@@ -66,6 +69,16 @@ export default function ThreadDetailPage({ params }: { params: Promise<{ id: str
           {thread.state && (
             <span className="rounded-full border px-2 py-0.5 text-foreground" title={stateNote ? `The keeper says: ${stateNote}` : undefined}>
               {thread.state}{stateNote ? ` · ${stateNote}` : ''}
+            </span>
+          )}
+          {delaying && (
+            <span
+              className={`rounded-full border px-2 py-0.5 ${isOwed(delaying.resolveBy) ? 'border-destructive text-destructive' : 'text-foreground'}`}
+              title={delaying.steps.map((s) => `${s.title} · until ${dayOf(s.resolveBy)}`).join('\n') || undefined}
+            >
+              Delaying Resolution until {dayOf(delaying.resolveBy)}
+              {isOwed(delaying.resolveBy) ? ' · owed' : ''}
+              {delaying.steps.length > 1 ? ` · ${delaying.steps.length} steps` : ''}
             </span>
           )}
           {openedAt && <span>Opened {spokenAt(openedAt)}</span>}
