@@ -72,7 +72,7 @@ One mapper, `app/lib/asterion/coaia-projection.mjs`, and three ways in:
 | way in | when | how |
 |---|---|---|
 | the registry sync | a registered project's files changed | `pnpm coaia:sync`, or the timer in `scripts/ops/` |
-| the door | a writer posts what it just wrote | `POST /api/ingest/coaia-narrative` with `Authorization: Bearer $ASTERION_INGEST_TOKEN` |
+| the door | a writer posts what it just wrote | `POST /api/ingest/coaia-narrative` with `Authorization: Bearer <its host's token>` |
 | by hand | a one-off file | `node scripts/import-coaia-jsonl.mjs <file> --project <key> [--apply]` |
 
 ```bash
@@ -90,9 +90,15 @@ record's own name, so a second pass updates rather than duplicates. A project th
 is not registered is never read and the door refuses it: what reaches the three
 public domains is decided at registration.
 
-The door is off unless `ASTERION_INGEST_TOKEN` is set, never prunes (it may be
-sent one file of several), and logs `tension.projected` only for charts whose
-content changed plus one `coaia.projected` per pass, with the writer as actor.
+The door is off unless a token is set. `ASTERION_INGEST_TOKENS` holds one
+`host=token` pair per machine (`lib/asterion/ingest-tokens.mjs`): the token names
+the host, the event log records it, and removing one pair cuts that machine off.
+The older single `ASTERION_INGEST_TOKEN` still works and reports as `unnamed`.
+The door feeds only a project registered with no files, one memory file posted
+whole, so it never shares a project with the registry sync. It never archives,
+and it logs `tension.projected` only for charts whose content changed, plus one
+`coaia.projected` for a pass that changed any, with the host (and the writer that
+named itself) as actor.
 
 ## Surfaces
 
