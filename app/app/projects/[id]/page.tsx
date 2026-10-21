@@ -3,7 +3,7 @@
 import { use, useState } from 'react'
 import useSWR from 'swr'
 import { useProject, useTensions } from '@/lib/asterion/hooks'
-import type { ProjectSeat } from '@/lib/asterion/types'
+import type { LegacyTmuxSeat, ProjectSeat } from '@/lib/asterion/types'
 import { Input } from '@/components/ui/input'
 import { AppShell } from '@/components/asterion/app-shell'
 import { TensionCard } from '@/components/asterion/tension-card'
@@ -108,7 +108,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
             </div>
             <SeatEditor
               projectId={project.id}
-              seat={(project.metadata?.seat as ProjectSeat | undefined) ?? null}
+              seat={(project.metadata?.seat as ProjectSeat | LegacyTmuxSeat | undefined) ?? null}
               onSaved={() => mutate()}
             />
           </CardContent>
@@ -147,16 +147,16 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
 type Session = { enabled: boolean; signed_in: boolean; writer: boolean }
 const fetchJson = (url: string) => fetch(url).then((res) => res.json())
 
-/** The seat: the agent session that keeps this project's charts. Anyone sees it; a writer names it. */
-function SeatEditor({ projectId, seat, onSaved }: { projectId: string; seat: ProjectSeat | null; onSaved: () => void }) {
+/** The seat: the agent that keeps this project's charts. Anyone sees it; a writer names it. */
+function SeatEditor({ projectId, seat, onSaved }: { projectId: string; seat: ProjectSeat | LegacyTmuxSeat | null; onSaved: () => void }) {
   const { data: session } = useSWR<Session>('/api/session', fetchJson)
+  const agentSeat = seat && 'agent' in seat ? seat : null
   const [editing, setEditing] = useState(false)
-  const [name, setName] = useState('')
-  const [host, setHost] = useState('')
+  const [form, setForm] = useState({ agent: '', name: '', folder: '', mcp_server: '' })
   const [busy, setBusy] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
 
-  const save = async (next: { session: string; host: string } | null) => {
+  const save = async (next: typeof form | null) => {
     setBusy(true)
     setMessage(null)
     const res = await fetch(`/api/projects/${projectId}`, {
@@ -172,47 +172,54 @@ function SeatEditor({ projectId, seat, onSaved }: { projectId: string; seat: Pro
   }
 
   const start = () => {
-    setName(seat?.session ?? '')
-    setHost(seat?.host ?? '')
+    setForm({
+      agent: agentSeat?.agent ?? '',
+      name: agentSeat?.name ?? '',
+      folder: agentSeat?.folder ?? '',
+      mcp_server: agentSeat?.mcp_server ?? '',
+    })
     setEditing(true)
   }
+  const field = (key: keyof typeof form) => ({
+    value: form[key],
+    onChange: (e: React.ChangeEvent<HTMLInputElement>) => setForm({ ...form, [key]: e.target.value }),
+  })
 
   return (
     <div className="space-y-2 border-t border-border pt-3">
       <div className="flex items-start justify-between gap-3">
-        <span className="flex items-center gap-1.5 text-muted-foreground" title="The agent session that keeps this project's charts">
-          <Armchair className="h-4 w-4" /> Seat
+        <span className="flex items-center gap-1.5 text-muted-foreground" title="The agent that keeps this project's charts">
+          <Armchair className="h-4 w-4" /> Kept by
         </span>
         <span className="text-right">
-          {seat ? (
-            <>
-              <span className="font-mono">{seat.session}</span>
-              {seat.host && <span className="text-muted-foreground"> on {seat.host}</span>}
-            </>
+          {agentSeat ? (
+            <span>{agentSeat.name}</span>
+          ) : seat && 'session' in seat ? (
+            <span className="text-muted-foreground">tmux <span className="font-mono">{seat.session}</span>, no agent named</span>
           ) : (
-            <span className="text-muted-foreground">none named</span>
+            <span className="text-muted-foreground">no agent named</span>
           )}
         </span>
       </div>
-      {seat && (
-        <p className="text-right text-xs text-muted-foreground">
-          named by {seat.set_by} {formatDistanceToNow(new Date(seat.set_at), { addSuffix: true })}
+      {agentSeat && (
+        <p className="break-all text-right text-xs text-muted-foreground">
+          {agentSeat.folder ? <>in <span className="font-mono">{agentSeat.folder}</span>{agentSeat.mcp_server && <>, with <span className="font-mono">{agentSeat.mcp_server}</span></>} · </> : null}
+          named by {agentSeat.set_by} {formatDistanceToNow(new Date(agentSeat.set_at), { addSuffix: true })}
         </p>
       )}
       {session?.writer && !editing && (
         <Button variant="outline" size="sm" className="w-full" onClick={start}>
-          {seat ? 'Change the seat' : 'Name the seat'}
+          {agentSeat ? 'Change the keeper' : 'Name the keeper'}
         </Button>
       )}
       {editing && (
-        <form
-          className="space-y-2"
-          onSubmit={(e) => { e.preventDefault(); save({ session: name, host }) }}
-        >
-          <Input aria-label="tmux session" placeholder="tmux session, e.g. stcbot" value={name} onChange={(e) => setName(e.target.value)} />
-          <Input aria-label="host" placeholder="host (optional), e.g. gaia" value={host} onChange={(e) => setHost(e.target.value)} />
+        <form className="space-y-2" onSubmit={(e) => { e.preventDefault(); save(form) }}>
+          <Input aria-label="agent's Miadi person id" placeholder="Miadi person id, e.g. node:human:1789710466321:95nnhl" {...field('agent')} />
+          <Input aria-label="agent's name" placeholder="name, e.g. Mia" {...field('name')} />
+          <Input aria-label="folder" placeholder="folder the agent works in (for steering)" {...field('folder')} />
+          <Input aria-label="chart server" placeholder="its .mcp.json server for these charts" {...field('mcp_server')} />
           <div className="flex gap-2">
-            <Button type="submit" size="sm" disabled={!name.trim() || busy}>{busy ? 'Saving…' : 'Save'}</Button>
+            <Button type="submit" size="sm" disabled={!form.agent.trim() || !form.name.trim() || busy}>{busy ? 'Saving…' : 'Save'}</Button>
             <Button type="button" size="sm" variant="ghost" onClick={() => setEditing(false)}>Cancel</Button>
             {seat && (
               <Button type="button" size="sm" variant="ghost" className="ml-auto" disabled={busy} onClick={() => save(null)}>Clear</Button>

@@ -82,17 +82,36 @@ export interface ActionStep {
 
 // Projects - Orchestration lenses across repos
 /**
- * The agent session that keeps a project's charts: where a steer made on Asterion
- * is meant to go. The same shape as a seat in Miadi's config/stc-steering.json
- * (a tmux session), plus the host it runs on. Kept in projects.metadata.seat,
- * which the registry sync never touches.
+ * The agent that keeps a project's charts, and where a steer made on one of them
+ * goes. Kept in projects.metadata.seat, which the registry sync never touches.
+ *
+ * `agent` is the agent's Miadi person id, the key of its door in Miadi's
+ * agent-handoff file (/srv/miadi/agent-handoff.json). A steer starts a fresh
+ * session of that agent through its door, in `folder`, with only `mcp_server`
+ * (a server of `<folder>/.mcp.json`, the one that writes this project's charts).
+ * A seat written before 2026-10-20 named a tmux session instead: `legacy`.
  */
 export interface ProjectSeat {
+  agent: string
+  name: string
+  folder: string | null
+  mcp_server: string | null
+  set_by: string
+  set_at: string
+}
+
+/** The shape a seat had from 2026-10-06 to 2026-10-20. */
+export interface LegacyTmuxSeat {
   kind: 'tmux'
   session: string
   host: string | null
-  set_by: string
-  set_at: string
+}
+
+/** A project a chart belongs to, and that project's seat. */
+export interface ChartSeat {
+  project_id: string
+  project_name: string
+  seat: ProjectSeat | LegacyTmuxSeat | null
 }
 
 export interface Project {

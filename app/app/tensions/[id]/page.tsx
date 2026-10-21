@@ -1,6 +1,8 @@
 'use client'
 
 import { use, useState } from 'react'
+import useSWR from 'swr'
+import type { ChartSeat } from '@/lib/asterion/types'
 import { useTension, updateTension, createActionStep } from '@/lib/asterion/hooks'
 import { AppShell } from '@/components/asterion/app-shell'
 import { PhaseBadge, StatusBadge, LayerBadge, EdgeTypeBadge, StepDelay } from '@/components/asterion/badges'
@@ -377,6 +379,9 @@ export default function TensionDetailPage({ params }: { params: Promise<{ id: st
 
         {/* Sidebar */}
         <div className="space-y-6">
+          {/* The agent that keeps this chart, and a writer's steer to it */}
+          <KeeperCard tensionId={tension.id} seats={data?.seats ?? []} />
+
           {/* Progress */}
           <Card>
             <CardHeader className="pb-3">
@@ -488,5 +493,82 @@ export default function TensionDetailPage({ params }: { params: Promise<{ id: st
         </div>
       </div>
     </AppShell>
+  )
+}
+
+type SteerResult = { status: string; detail: string; agent_name: string; door: string | null; brief?: string; session_id?: string }
+const fetchSession = (url: string) => fetch(url).then((res) => res.json())
+
+/**
+ * Who keeps this chart (the seat of its project), and for a signed-in writer a steer to
+ * that agent. A steer is previewed first; sending it starts a fresh session of the agent
+ * through its door, on gaia only (lib/asterion/steer.ts).
+ */
+function KeeperCard({ tensionId, seats }: { tensionId: string; seats: ChartSeat[] }) {
+  const { data: session } = useSWR<{ writer: boolean }>('/api/session', fetchSession)
+  const keeper = seats.find((s) => s.seat && 'agent' in s.seat)
+  const seat = keeper?.seat && 'agent' in keeper.seat ? keeper.seat : null
+  const [text, setText] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [result, setResult] = useState<SteerResult | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  const send = async (dryRun: boolean) => {
+    setBusy(true)
+    setError(null)
+    const res = await fetch(`/api/tensions/${tensionId}/steer`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, dry_run: dryRun }),
+    })
+    const body = await res.json().catch(() => ({}))
+    setBusy(false)
+    if (body.steer) setResult(body.steer as SteerResult)
+    else { setResult(null); setError(body.error ?? 'The steer could not be sent.') }
+    if (!dryRun && body.steer?.status === 'sent') setText('')
+  }
+
+  if (seats.length === 0) return null
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base">Kept by</CardTitle>
+        <CardDescription>
+          {seat ? (
+            <>{seat.name}, for <Link href={`/projects/${keeper!.project_id}`} className="underline underline-offset-4">{keeper!.project_name}</Link></>
+          ) : (
+            <>No agent is named for <Link href={`/projects/${seats[0].project_id}`} className="underline underline-offset-4">{seats[0].project_name}</Link></>
+          )}
+        </CardDescription>
+      </CardHeader>
+      {seat && session?.writer && (
+        <CardContent className="space-y-2">
+          <Textarea
+            aria-label={`Steer for ${seat.name}`}
+            placeholder={`What should ${seat.name} do on this chart?`}
+            value={text}
+            onChange={(e) => { setText(e.target.value); setResult(null) }}
+            rows={3}
+          />
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" disabled={!text.trim() || busy} onClick={() => send(true)}>Preview</Button>
+            <Button size="sm" disabled={!text.trim() || busy || result?.status !== 'preview'} onClick={() => send(false)}>
+              {busy ? 'Sending…' : `Send to ${seat.name}`}
+            </Button>
+          </div>
+          {result && (
+            <div className="space-y-1 text-xs">
+              <p className={result.status === 'preview' || result.status === 'sent' ? 'text-muted-foreground' : 'text-destructive'}>
+                {result.detail}{result.session_id ? ` (session ${result.session_id})` : ''}
+              </p>
+              {result.brief && (
+                <pre className="max-h-48 overflow-auto whitespace-pre-wrap rounded bg-muted p-2 font-mono text-[11px]">{result.brief}</pre>
+              )}
+            </div>
+          )}
+          {error && <p className="text-xs text-destructive">{error}</p>}
+        </CardContent>
+      )}
+    </Card>
   )
 }

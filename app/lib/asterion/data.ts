@@ -7,6 +7,7 @@ import { PRIVATE_PROJECT_IDS, PRIVATE_SOURCES, PRIVATE_TENSION_IDS, PRIVATE_THRE
 import type { 
   Project, 
   ProjectSeat,
+  ChartSeat,
   CreateProjectInput,
   ProjectTension,
   Layer,
@@ -88,11 +89,25 @@ export async function createProject(input: CreateProjectInput): Promise<Project>
   return result[0] as Project
 }
 
-// A tmux session name (Miadi's seats are tmux sessions) and a host name.
-export const SEAT_SESSION_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._:@-]{0,127}$/
-export const SEAT_HOST_PATTERN = /^[A-Za-z0-9][A-Za-z0-9.-]{0,62}$/
+// A Miadi person id (node:<kind>:<epoch ms>:<suffix>), an absolute folder, and a server name.
+export const SEAT_AGENT_PATTERN = /^node:[a-z]+:\d+:[a-z0-9]+$/
+export const SEAT_FOLDER_PATTERN = /^\/(?!.*\/\.\.(\/|$))[A-Za-z0-9._\/@+-]{0,400}$/
+export const SEAT_SERVER_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/
 
-/** Name the session that keeps a project's charts, or clear it with null. */
+/** The projects a chart belongs to, with their seats; private ones only for a writer. */
+export async function getSeatsOfTension(tensionId: string, viewer: Viewer): Promise<ChartSeat[]> {
+  const rows = await sql.query(
+    `SELECT p.id AS project_id, p.name AS project_name, p.metadata->'seat' AS seat
+       FROM asterion.project_tensions pt
+       JOIN asterion.projects p ON p.id = pt.project_id
+      WHERE pt.tension_id = $1 ${seesPrivate(viewer) ? '' : `AND p.id NOT IN (${PRIVATE_PROJECT_IDS})`}
+      ORDER BY p.name`,
+    [tensionId]
+  )
+  return (rows as ChartSeat[]).map((r) => ({ ...r, seat: r.seat ?? null }))
+}
+
+/** Name the agent that keeps a project's charts, or clear it with null. */
 export async function setProjectSeat(id: string, seat: ProjectSeat | null): Promise<Project | null> {
   const result = await sql`
     UPDATE asterion.projects

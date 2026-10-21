@@ -1,5 +1,5 @@
 // GET /api/projects/[id] - Get project with tensions
-// PATCH /api/projects/[id] - Name the project's seat: { seat: { session, host? } | null }
+// PATCH /api/projects/[id] - Name the agent that keeps its charts: { seat: { agent, name, folder?, mcp_server? } | null }
 // POST /api/projects/[id]/tensions - Add tension to project
 // DELETE /api/projects/[id]/tensions/[tensionId] - Remove tension from project
 
@@ -8,8 +8,9 @@ import {
   getProjectWithTensions,
   addTensionToProject,
   setProjectSeat,
-  SEAT_SESSION_PATTERN,
-  SEAT_HOST_PATTERN,
+  SEAT_AGENT_PATTERN,
+  SEAT_FOLDER_PATTERN,
+  SEAT_SERVER_PATTERN,
   logEvent
 } from '@/lib/asterion'
 import { currentWriter, requireWriter } from '@/lib/asterion/writer'
@@ -92,27 +93,37 @@ export async function PATCH(
   if (denied) return denied
   try {
     const { id } = await params
-    const body = (await request.json().catch(() => null)) as { seat?: { session?: unknown; host?: unknown } | null } | null
+    const body = (await request.json().catch(() => null)) as
+      | { seat?: { agent?: unknown; name?: unknown; folder?: unknown; mcp_server?: unknown } | null }
+      | null
     if (!body || !('seat' in body)) {
-      return NextResponse.json({ error: 'Send { seat: { session, host? } } or { seat: null }' }, { status: 400 })
+      return NextResponse.json({ error: 'Send { seat: { agent, name, folder?, mcp_server? } } or { seat: null }' }, { status: 400 })
     }
     const existing = await getProjectWithTensions(id, viewerOf(request))
     if (!existing) return NextResponse.json({ error: 'Project not found' }, { status: 404 })
 
     let seat = null
     if (body.seat !== null) {
-      const session = typeof body.seat?.session === 'string' ? body.seat.session.trim() : ''
-      const host = typeof body.seat?.host === 'string' && body.seat.host.trim() ? body.seat.host.trim() : null
-      if (!SEAT_SESSION_PATTERN.test(session)) {
-        return NextResponse.json({ error: 'seat.session must be a tmux session name' }, { status: 400 })
+      const text = (v: unknown) => (typeof v === 'string' && v.trim() ? v.trim() : null)
+      const agent = text(body.seat?.agent) ?? ''
+      const name = text(body.seat?.name) ?? ''
+      const folder = text(body.seat?.folder)
+      const server = text(body.seat?.mcp_server)
+      if (!SEAT_AGENT_PATTERN.test(agent)) {
+        return NextResponse.json({ error: 'seat.agent must be a Miadi person id (node:<kind>:<number>:<suffix>)' }, { status: 400 })
       }
-      if (host !== null && !SEAT_HOST_PATTERN.test(host)) {
-        return NextResponse.json({ error: 'seat.host must be a host name' }, { status: 400 })
+      if (!name || name.length > 80) return NextResponse.json({ error: 'seat.name must be 1 to 80 characters' }, { status: 400 })
+      if (folder !== null && !SEAT_FOLDER_PATTERN.test(folder)) {
+        return NextResponse.json({ error: 'seat.folder must be an absolute path' }, { status: 400 })
+      }
+      if (server !== null && !SEAT_SERVER_PATTERN.test(server)) {
+        return NextResponse.json({ error: 'seat.mcp_server must be a server name' }, { status: 400 })
       }
       seat = {
-        kind: 'tmux' as const,
-        session,
-        host,
+        agent,
+        name,
+        folder,
+        mcp_server: server,
         set_by: currentWriter(request)?.name ?? 'writer',
         set_at: new Date().toISOString(),
       }

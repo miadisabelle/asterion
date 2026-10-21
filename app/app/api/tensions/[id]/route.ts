@@ -5,6 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { 
   getTensionWithRelations,
+  getSeatsOfTension,
   updateTension,
   deleteTension,
   validateTension,
@@ -31,7 +32,9 @@ export async function GET(
       )
     }
 
-    return NextResponse.json({ tension })
+    // The agent that keeps this chart, through the projects it belongs to.
+    const seats = await getSeatsOfTension(id, viewerOf(request))
+    return NextResponse.json({ tension, seats })
   } catch (error) {
     console.error('Error fetching tension:', error)
     return NextResponse.json(

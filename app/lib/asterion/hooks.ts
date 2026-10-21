@@ -1,7 +1,7 @@
 'use client'
 
 import useSWR from 'swr'
-import type { Tension, Phase, Layer, Project, NarrativeThread, NarrativeBeat, ThreadChart } from '@/lib/asterion/types'
+import type { Tension, Phase, Layer, Project, NarrativeThread, NarrativeBeat, ThreadChart, ChartSeat } from '@/lib/asterion/types'
 
 const fetcher = (url: string) => fetch(url).then(res => res.json())
 
@@ -27,7 +27,7 @@ export function useTensions(filters?: {
 }
 
 export function useTension(id: string | null) {
-  return useSWR<{ tension: Tension }>(
+  return useSWR<{ tension: Tension; seats?: ChartSeat[] }>(
     id ? `/api/tensions/${id}` : null,
     fetcher
   )
