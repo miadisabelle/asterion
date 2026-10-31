@@ -8,8 +8,10 @@
 #   2. once it answers, restores the dump into the database asterion_neon of asterion-postgres (never into the
 #      live database asterion) and records each table's row count;
 #   3. writes the merge brief (asterion-neon-merge-brief.md + the counts) to ~/workspace/factory/missions/;
-#   4. stages an agent seat: tmux session asterion-neon-merge in the repo, its command typed and not sent, so the
-#      merge starts when a person presses Enter;
+#   4. tells the mission on /missions: the miadi-run mission MISSION (prepared in miadi-chronicle://566 on
+#      2026-10-31, Guillaume: "maybe in the /missions of the Miadi Factory platform") gets an observation that the
+#      copy is ready, so it shows there until a person launches it. If that call fails, it stages the seat instead:
+#      tmux session asterion-neon-merge in the repo, its command typed and not sent, waiting for Enter;
 #   5. marks itself done and disables its timer. Nothing is ever written to Neon.
 #
 #   scripts/ops/asterion-neon-watch.sh             one pass (what the timer runs)
@@ -25,6 +27,8 @@ NEON_ENV="${ASTERION_NEON_ENV:-$HOME/.config/asterion/neon.env}"
 STATE="${XDG_STATE_HOME:-$HOME/.local/state}/asterion"
 MISSIONS="${ASTERION_MISSIONS_DIR:-$HOME/workspace/factory/missions}"
 SEAT="asterion-neon-merge"
+MISSION="${ASTERION_NEON_MERGE_MISSION:-miadiRun-2610310800-asterion-neon-merge-neon-data-joins-the-local-store.v1}"
+MIADI_RUN="${MIADI_RUN:-node ${MIADI_ORCHESTRATION_KIT_ROOT:-/workspace/repos/jgwill/miadi-orchestration-kit}/skills/miadi-run/miadi-run.mjs}"
 UNIT="asterion-neon-watch"
 mkdir -p "$STATE"
 log() { echo "asterion-neon-watch: $*"; }
@@ -121,12 +125,19 @@ log "brief: $brief"
 
 if [ "$SELFTEST" = 1 ]; then log "self-test: no seat staged; drop it with: docker exec asterion-postgres dropdb -U asterion $TARGET"; exit 0; fi
 
-if ! tmux has-session -t "=$SEAT" 2>/dev/null; then
+told=""
+if $MIADI_RUN observe "$MISSION" --kind research \
+     --summary "Neon answered: copied read-only into $TARGET of asterion-postgres; the brief is $brief. Ready to launch on your word: miadi-run launch $MISSION --authorized-by <who>" \
+     --detail-file "$brief" > "$STATE/neon-mission-observe.json" 2>&1; then
+  told="mission $MISSION told (/missions)"
+  log "$told"
+elif ! tmux has-session -t "=$SEAT" 2>/dev/null; then
   tmux new-session -d -s "$SEAT" -c "$ROOT"
   sleep 2
   tmux send-keys -t "=$SEAT" -l "claude \"Read $brief whole, then do it.\""
-  log "seat staged: tmux $SEAT, command typed, waiting for Enter"
+  told="seat $SEAT staged (the mission could not be told: $STATE/neon-mission-observe.json)"
+  log "$told"
 fi
-echo "$(date -Is) Neon copied into $TARGET; seat $SEAT staged" > "$STATE/neon-snapshot.done"
+echo "$(date -Is) Neon copied into $TARGET; $told" > "$STATE/neon-snapshot.done"
 echo "$(date -Is) done" > "$STATE/neon-watch.last"
 systemctl --user disable "$UNIT.timer" 2>/dev/null || true
