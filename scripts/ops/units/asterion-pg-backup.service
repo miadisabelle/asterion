@@ -1,0 +1,8 @@
+[Unit]
+Description=Asterion: dump its own Postgres into /srv/miadi/backups/asterion and check that the dump restores
+After=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/workspace/repos/miadisabelle/asterion
+ExecStart=/workspace/repos/miadisabelle/asterion/scripts/ops/asterion-pg-backup.sh --verify

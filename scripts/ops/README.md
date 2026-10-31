@@ -79,3 +79,22 @@ Before enabling the timer, the one-shot pass must show every project as
 is reached over ssh needs a key the user session can use without an agent.
 
 Without the timer, the same pass by hand is `cd app && node scripts/coaia-sync.mjs sync`.
+
+## Backups of the local Postgres — installed on gaia 2026-10-31
+
+Neon kept backups for us; since Asterion runs on its own Postgres (`docker/compose.yml`,
+volume `asterion-postgres-data`), `asterion-pg-backup.timer` does it: every night at 03:15,
+`scripts/ops/asterion-pg-backup.sh --verify` writes a `pg_dump -Fc` of every Asterion database to
+`/srv/miadi/backups/asterion/<db>-<yymmddHHMM>.dump` with its `.sha256`, keeps the newest 14,
+then restores the newest into a throwaway database and compares the row count of every table.
+At 03:34 `miadi-data-backup.timer` archives `/srv/miadi` to `/g`, and the offsite timer copies
+that archive off the host, so each dump travels with them.
+
+```bash
+cp scripts/ops/units/asterion-pg-backup.{service,timer} ~/.config/systemd/user/
+systemctl --user daemon-reload && systemctl --user enable --now asterion-pg-backup.timer
+systemctl --user start asterion-pg-backup.service      # one dump and its restore check, now
+```
+
+Restore a dump into the live database (stop `asterion-server` first):
+`docker exec -i asterion-postgres sh -c 'pg_restore -U "$POSTGRES_USER" -d asterion --clean --if-exists --no-owner' < /srv/miadi/backups/asterion/asterion-<stamp>.dump`

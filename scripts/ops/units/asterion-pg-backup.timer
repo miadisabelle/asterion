@@ -1,0 +1,9 @@
+[Unit]
+Description=Asterion: a nightly dump before gaia's own backup (miadi-data-backup, 03:34) carries /srv/miadi to /g
+
+[Timer]
+OnCalendar=*-*-* 03:15
+Persistent=true
+
+[Install]
+WantedBy=timers.target
