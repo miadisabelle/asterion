@@ -2,7 +2,7 @@
 # asterion-neon-watch.sh — wait for Neon to answer again, then copy it read-only and stage the merge.
 #
 # Since 2026-10-31 Asterion runs on asterion-postgres with provisional data, while Neon refuses every connection
-# (quota exceeded) and still holds what only it had. Run by asterion-neon-watch.timer every 6 hours, this:
+# (quota exceeded) and still holds what only it had. Run by asterion-neon-watch.timer every other day, this:
 #   1. tries pg_dump of schema asterion from Neon (settings in ~/.config/asterion/neon.env); a refusal is logged
 #      and the next run tries again;
 #   2. once it answers, restores the dump into the database asterion_neon of asterion-postgres (never into the
@@ -43,11 +43,11 @@ ExecStart=/bin/bash $HERE/asterion-neon-watch.sh
 EOF
   cat > "$dir/$UNIT.timer" <<EOF
 [Unit]
-Description=Asterion: try Neon every 6 hours until it answers (asterion-neon-watch.sh)
+Description=Asterion: try Neon every other day until it answers (asterion-neon-watch.sh)
 
 [Timer]
-OnBootSec=10min
-OnUnitActiveSec=6h
+# Every other day at 04:00, and once at the next boot if gaia was off then (Guillaume, 2026-10-31: every 48 hours).
+OnCalendar=*-*-1/2 04:00:00
 Persistent=true
 
 [Install]
