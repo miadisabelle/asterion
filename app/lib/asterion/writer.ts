@@ -22,7 +22,8 @@ import { NextResponse } from 'next/server'
 export const SESSION_COOKIE = 'asterion_session'
 /** The 0.1 cookie held the raw writer token; it is cleared on sign-out and never read. */
 export const LEGACY_WRITER_COOKIE = 'asterion_writer'
-export const SESSION_HOURS = 12
+// 180 days: the sign-in lasts about six months in the browser's cookie store.
+export const SESSION_HOURS = 24 * 180
 
 export type Tier = 'write' | 'read' | null
 
