@@ -1,0 +1,11 @@
+{
+  "name": "asterion-postgres-http",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Neon's HTTP SQL protocol in front of asterion-postgres, so @neondatabase/serverless keeps working unchanged",
+  "main": "server.js",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "pg": "8.23.1"
+  }
+}

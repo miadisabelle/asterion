@@ -1,5 +1,9 @@
 // Asterion Database Layer - Neon PostgreSQL
-import { neon } from '@neondatabase/serverless'
+import { neon, neonConfig } from '@neondatabase/serverless'
+
+// A Postgres on this host answers Neon's HTTP protocol through asterion-postgres-http (docker/compose.yml).
+// The driver otherwise always calls https://api.<host>/sql, so a local store needs this one setting.
+if (process.env.NEON_HTTP_ENDPOINT) neonConfig.fetchEndpoint = process.env.NEON_HTTP_ENDPOINT
 
 const connectionString = process.env.DATABASE_URL
 

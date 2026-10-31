@@ -1,0 +1,133 @@
+# Asterion data plane: its own Postgres on this host, and Neon's HTTP protocol in front of it.
+#
+# Built the way Miadi's Redis was (jgwill/Miadi#639, /a/src/Miadi/docker/compose.yml): a store on loopback
+# with a named volume and a health check, and a gateway that speaks the wire dialect the app already uses,
+# so moving off Neon is a change of environment, not of code.
+#
+# Run from this directory:
+#   cp .env.example .env && edit the password      (never committed)
+#   docker compose up -d --build
+#
+# The schema stays `asterion`, as on Neon, so Miadi can absorb it later.
+
+name: asterion
+
+services:
+  # ---------------------------------------------------------------------
+  # asterion-postgres: the store itself, native protocol on 5434.
+  # ---------------------------------------------------------------------
+  asterion-postgres:
+    image: postgres:17-alpine
+    container_name: asterion-postgres
+    hostname: asterion-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: asterion
+      POSTGRES_USER: asterion
+      POSTGRES_PASSWORD: ${ASTERION_PG_PASSWORD:?set ASTERION_PG_PASSWORD in docker/.env}
+    # Loopback only: the app, the scripts and the gateway reach it from this host or this network.
+    ports:
+      - "127.0.0.1:${ASTERION_PG_PORT:-5434}:5432"
+    volumes:
+      - asterion-postgres-data:/var/lib/postgresql/data
+    networks:
+      - asterion-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U asterion -d asterion -q"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    # Asterion is a few thousand rows; this host also runs the app, Miadi's stack and the trading stack.
+    deploy:
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 512M
+        reservations:
+          memory: 128M
+    stop_grace_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ---------------------------------------------------------------------
+  # asterion-postgres-http: Neon's HTTP SQL protocol in front of asterion-postgres, on 5435.
+  #
+  # The app's 115 queries go through @neondatabase/serverless `neon()`, which only speaks HTTP. This
+  # gateway answers that protocol (postgres-http/server.js), and the app points neonConfig.fetchEndpoint
+  # at it with NEON_HTTP_ENDPOINT=http://127.0.0.1:5435/sql.
+  # ---------------------------------------------------------------------
+  asterion-postgres-http:
+    build:
+      context: ./postgres-http
+      dockerfile: Dockerfile
+    image: asterion/postgres-http:1.0.0
+    container_name: asterion-postgres-http
+    hostname: asterion-postgres-http
+    restart: unless-stopped
+    environment:
+      ASTERION_PG_URL: postgres://asterion:${ASTERION_PG_PASSWORD}@asterion-postgres:5432/asterion
+      ASTERION_PG_PASSWORD: ${ASTERION_PG_PASSWORD}
+      PORT: "4444"
+    ports:
+      - "127.0.0.1:${ASTERION_PG_HTTP_PORT:-5435}:4444"
+    depends_on:
+      asterion-postgres:
+        condition: service_healthy
+    networks:
+      - asterion-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:4444/health | grep -q ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 256M
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # ---------------------------------------------------------------------
+  # Preview only (docker compose --profile preview up -d): a throwaway Redis behind Miadi's Upstash-compatible
+  # gateway image, so an Asterion on the local store can cache without writing into the live instance's
+  # Upstash keys. Not part of the switch: the live Asterion keeps its Upstash cache.
+  # ---------------------------------------------------------------------
+  asterion-preview-redis:
+    image: redis:7-alpine
+    container_name: asterion-preview-redis
+    profiles: ["preview"]
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    networks:
+      - asterion-net
+
+  asterion-preview-redis-http:
+    image: miadi/redis-http:1.0.0
+    container_name: asterion-preview-redis-http
+    profiles: ["preview"]
+    environment:
+      SRH_MODE: env
+      SRH_TOKEN: ${ASTERION_PREVIEW_REDIS_TOKEN:-preview-only}
+      SRH_CONNECTION_STRING: "redis://asterion-preview-redis:6379"
+    ports:
+      - "127.0.0.1:${ASTERION_PREVIEW_REDIS_PORT:-5436}:8080"
+    depends_on:
+      - asterion-preview-redis
+    networks:
+      - asterion-net
+
+volumes:
+  asterion-postgres-data:
+    name: asterion-postgres-data
+
+networks:
+  asterion-net:
+    name: asterion-net

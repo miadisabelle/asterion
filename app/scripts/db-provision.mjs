@@ -20,7 +20,7 @@
 import { readFileSync, readdirSync, existsSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { neon } from '@neondatabase/serverless'
+import { neon, neonConfig } from '@neondatabase/serverless'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 const args = new Set(process.argv.slice(2))
@@ -43,6 +43,8 @@ if (!process.env.DATABASE_URL) {
   process.exit(1)
 }
 
+// A local Postgres behind asterion-postgres-http (docker/compose.yml), as in lib/asterion/db.ts.
+if (process.env.NEON_HTTP_ENDPOINT) neonConfig.fetchEndpoint = process.env.NEON_HTTP_ENDPOINT
 const sql = neon(process.env.DATABASE_URL)
 
 // Split on semicolons that sit outside single-quoted strings.

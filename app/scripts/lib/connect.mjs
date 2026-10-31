@@ -26,7 +26,9 @@ export async function connect() {
     console.error('DATABASE_URL is not set. Copy .env.example to .env.local and fill it in.')
     process.exit(1)
   }
-  const { neon } = await import('@neondatabase/serverless')
+  const { neon, neonConfig } = await import('@neondatabase/serverless')
+  // A local Postgres behind asterion-postgres-http (docker/compose.yml), as in lib/asterion/db.ts.
+  if (process.env.NEON_HTTP_ENDPOINT) neonConfig.fetchEndpoint = process.env.NEON_HTTP_ENDPOINT
   return neon(process.env.DATABASE_URL)
 }
 
